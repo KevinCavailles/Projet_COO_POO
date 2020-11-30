@@ -26,7 +26,8 @@ public class VueConnexion extends Vue {
 		//Creation fenetre
 		frame = new JFrame("Connexion");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setSize(120, 40);
+		frame.setSize(400, 100);
+		frame.setLocationRelativeTo(null);
 		
 		//Creation panel
 		panel = new JPanel(new GridLayout(3,1));
@@ -41,7 +42,6 @@ public class VueConnexion extends Vue {
 		frame.getContentPane().add(panel, BorderLayout.CENTER);
 		
 		//Affiche la fenetre
-		frame.pack();
 		frame.setVisible(true);
 	}
 	
