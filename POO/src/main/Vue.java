@@ -1,11 +1,11 @@
 package main;
 
-import javax.swing.JPanel;
+import javax.swing.JFrame;
 
-public class Vue extends JPanel{
+public class Vue extends JFrame{
 
-	public Vue() {
-		// TODO Auto-generated constructor stub
+	public Vue(String title) {
+		super(title);
 	}
 	
 	public void reduireAgent() {}

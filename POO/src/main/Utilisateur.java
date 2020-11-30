@@ -18,7 +18,8 @@ public class Utilisateur implements Serializable{
 	public Utilisateur(String id, String pseudo,String host) throws UnknownHostException {
 		this.id = id;
 		this.pseudo = pseudo;
-		this.ip = InetAddress.getByName(host);
+		this.ip = InetAddress.getLocalHost();
+		System.out.println(InetAddress.getLocalHost());
 	}
 
 	
