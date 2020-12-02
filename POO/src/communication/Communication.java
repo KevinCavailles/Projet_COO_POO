@@ -39,6 +39,8 @@ public class Communication extends Thread{
 		return -1;
 	}
 	
+	//TODO
+	//Combiner add et change
 	protected static synchronized void addUser(List<String> datas) throws UnknownHostException {
 
 		String idClient = datas.get(0);
@@ -56,7 +58,7 @@ public class Communication extends Thread{
 		String pseudoClient = datas.get(1);
 		int index = Communication.getIndexFromID(idClient);
 		System.out.println(index);
-		if( index != -1) {
+		if(index != -1) {
 			Communication.users.get(index).setPseudo(pseudoClient);
 			VueStandard.userList.set(index, pseudoClient);
 		}
@@ -69,6 +71,13 @@ public class Communication extends Thread{
 		if( index != -1) {
 			Communication.users.remove(index);
 			VueStandard.userList.remove(index);
+		}
+	}
+	
+	public static void removeAll(){
+		int oSize = Communication.users.size();
+		for(int i=0; i<oSize;i++) {
+			Communication.users.remove(0);
 		}
 	}
 }

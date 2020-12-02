@@ -75,7 +75,36 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 			}
 
 			this.vue.toggleEditPseudo();
-
+		}
+		
+		if((JButton) e.getSource() == this.vue.getButtonDeconnexion() ) {
+			try {
+				this.commUDP.sendMessageDelete();
+				Communication.removeAll();
+				VueStandard.userList.removeAllElements();
+				Utilisateur.getSelf().setPseudo("");
+				//Ajouter code pour passer à la vue de connexion
+				//
+				//
+			} catch (IOException e1) {
+				
+				e1.printStackTrace();
+			}
+		}
+		
+		
+		if((JButton) e.getSource() == this.vue.getButtonConnexion() ) {
+			try {
+				Utilisateur.getSelf().setPseudo(this.vue.getDisplayedPseudo());
+				this.commUDP.sendMessageConnecte();
+				this.commUDP.sendMessageAdd();
+				//Ajouter code pour passer à la vue de connexion
+				//
+				//
+			} catch (IOException e1) {
+				
+				e1.printStackTrace();
+			}
 		}
 	}
 	

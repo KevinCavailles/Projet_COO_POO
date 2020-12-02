@@ -32,6 +32,8 @@ public class VueStandard extends Vue {
 	private JList<String> activeUsersList;
 	private JTextField pseudoSelf;
 	private JButton modifierPseudo;
+	private JButton seConnecter;
+	private JButton seDeconnecter;
 	private ControleurStandard c;
 	public static DefaultListModel<String> userList = new DefaultListModel<String>();
 	
@@ -43,20 +45,20 @@ public class VueStandard extends Vue {
 		
 		this.c = new ControleurStandard(this, port, clientPort, portsOther);
 		
-		
+		//--------Panel haut pseudo--------//
 		JPanel self = new JPanel(new GridLayout(1, 3));
 		
 		this.pseudoSelf = new JTextField(Utilisateur.getSelf().getPseudo());
 		this.pseudoSelf.setEditable(false);
 		
 		this.modifierPseudo = new JButton("Modifier");
-		this.modifierPseudo.addActionListener(c);
+		this.modifierPseudo.addActionListener(this.c);
 		
 		self.add(new JLabel("Moi : "));
 		self.add(this.pseudoSelf);
 		self.add(this.modifierPseudo);
 		
-		
+		//--------Panel milieu liste utilisateurs--------//
 		this.activeUsersList = new JList<String>(VueStandard.userList);
 		this.activeUsersList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		this.activeUsersList.setLayoutOrientation(JList.VERTICAL);
@@ -70,8 +72,23 @@ public class VueStandard extends Vue {
 	            BorderFactory.createTitledBorder("Utilisateurs Actifs"), 
 	            BorderFactory.createEmptyBorder(5,2,2,2)));
 		
+		
+		//--------Panel bas deconnexion--------//
+		JPanel deconnexion = new JPanel(new GridLayout(1, 2));
+		
+		this.seConnecter = new JButton("Se Connecter");
+		this.seConnecter.addActionListener(this.c);
+		
+		this.seDeconnecter = new JButton("Se Déconnecter");
+		this.seDeconnecter.addActionListener(this.c);
+		
+		deconnexion.add(this.seConnecter);
+		deconnexion.add(this.seDeconnecter);
+		
+		//--------Ajout à la vue--------//
 		main.add(self);
 		main.add(listScroller);
+		main.add(deconnexion);
 		
 		this.add(main);
 		
@@ -88,6 +105,14 @@ public class VueStandard extends Vue {
 	
 	protected JButton getButtonModifierPseudo() {
 		return this.modifierPseudo;
+	}
+	
+	protected JButton getButtonDeconnexion() {
+		return this.seDeconnecter;
+	}
+	
+	protected JButton getButtonConnexion() {
+		return this.seConnecter;
 	}
 	
 	protected String getDisplayedPseudo() {

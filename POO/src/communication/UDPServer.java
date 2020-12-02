@@ -29,17 +29,22 @@ public class UDPServer extends Thread {
 				DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
 				this.sockUDP.receive(inPacket);
 				String msg = new String(inPacket.getData(), 0, inPacket.getLength());
-				if (msg.equals("first_connection")) {
-					System.out.println("first co");
-					this.commUDP.sendMessageAdd();
-					//new ReceiverUDP(Mode.PREMIERE_CONNEXION, inPacket).start();
-				} else if (msg.contains("add,")) {
-					System.out.println("add");
+				
+				if (msg.equals("first_connection")) {	
+					//System.out.println("first co");
+					ArrayList<Integer> portClient = new ArrayList<Integer>();
+					portClient.add(inPacket.getPort()+1);
+					this.commUDP.sendMessageAdd(portClient);
+					
+				} else if (msg.contains("add,")) {		
+					//System.out.println("add");
 					ArrayList<String> datas = this.getDatas(inPacket);
 					Communication.addUser(datas);
-				} else if (msg.contains("modify,")) {
+					
+				} else if (msg.contains("modify,")) {	
 					ArrayList<String> datas = this.getDatas(inPacket);
 					Communication.changePseudoUser(datas);
+					
 				} else if (msg.contains("del,")) {
 					ArrayList<String> datas = this.getDatas(inPacket);
 					Communication.removeUser(datas);
@@ -54,8 +59,13 @@ public class UDPServer extends Thread {
 	}
 	
 	protected ArrayList<String> getDatas(DatagramPacket inPacket) {
+		//Message
+		//
+		
 		String msg = new String(inPacket.getData(), 0, inPacket.getLength());
 		String tmp[] = msg.split(",");
+		
+		
 		
 		ArrayList<String> datas = new ArrayList<String>(Arrays.asList(tmp));
 		datas.remove(0);
