@@ -86,6 +86,8 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				//Ajouter code pour passer à la vue de connexion
 				//
 				//
+				this.vue.toggleEnableButtonConnexion();
+				this.vue.toggleEnableButtonDeconnexion();
 			} catch (IOException e1) {
 				
 				e1.printStackTrace();
@@ -98,9 +100,9 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				Utilisateur.getSelf().setPseudo(this.vue.getDisplayedPseudo());
 				this.commUDP.sendMessageConnecte();
 				this.commUDP.sendMessageAdd();
-				//Ajouter code pour passer à la vue de connexion
-				//
-				//
+				
+				this.vue.toggleEnableButtonConnexion();
+				this.vue.toggleEnableButtonDeconnexion();
 			} catch (IOException e1) {
 				
 				e1.printStackTrace();

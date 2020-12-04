@@ -1,7 +1,6 @@
 package main;
 
-import java.awt.Dimension;
-import java.awt.GridLayout;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -18,6 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
@@ -41,14 +41,30 @@ public class VueStandard extends Vue {
 	public VueStandard(String title, int port, int clientPort, int[] portsOther) throws IOException {
 		super(title);
 		
-		JPanel main = new JPanel(new GridLayout(3, 1));
+		JPanel main = new JPanel(new GridBagLayout());
+		main.setBackground(Color.green);
+		
+		JPanel left = new JPanel(new BorderLayout());
+		left.setBackground(Color.red);
+		left.setPreferredSize(new Dimension(200, 200));
+		
+		JPanel chat = new JPanel();
+		chat.setBackground(Color.blue);
+		chat.setPreferredSize(new Dimension(575, 600));
+		
+		JPanel bottom = new JPanel(new GridLayout(1, 2));
+		bottom.setBackground(Color.yellow);
+		bottom.setPreferredSize(new Dimension(575, 150));
+		
+		
 		
 		this.c = new ControleurStandard(this, port, clientPort, portsOther);
 		
 		//--------Panel haut pseudo--------//
-		JPanel self = new JPanel(new GridLayout(1, 3));
+		JPanel self = new JPanel(new FlowLayout());
 		
 		this.pseudoSelf = new JTextField(Utilisateur.getSelf().getPseudo());
+		this.pseudoSelf.setPreferredSize(new Dimension(100, 20));
 		this.pseudoSelf.setEditable(false);
 		
 		this.modifierPseudo = new JButton("Modifier");
@@ -77,6 +93,7 @@ public class VueStandard extends Vue {
 		JPanel deconnexion = new JPanel(new GridLayout(1, 2));
 		
 		this.seConnecter = new JButton("Se Connecter");
+		this.seConnecter.setEnabled(false);
 		this.seConnecter.addActionListener(this.c);
 		
 		this.seDeconnecter = new JButton("Se Déconnecter");
@@ -86,13 +103,48 @@ public class VueStandard extends Vue {
 		deconnexion.add(this.seDeconnecter);
 		
 		//--------Ajout à la vue--------//
-		main.add(self);
-		main.add(listScroller);
-		main.add(deconnexion);
+		left.add(self, BorderLayout.PAGE_START);
+		left.add(listScroller, BorderLayout.CENTER);
+		left.add(deconnexion, BorderLayout.PAGE_END);
+		
+		
+		
+		GridBagConstraints gridBagConstraint = new GridBagConstraints();
+		
+		gridBagConstraint.fill = GridBagConstraints.BOTH;
+		gridBagConstraint.gridx = 0;
+		gridBagConstraint.gridy = 0;
+		gridBagConstraint.gridwidth = 1;
+		gridBagConstraint.gridheight = 4;
+		gridBagConstraint.weightx = 0.33;
+		gridBagConstraint.weighty = 1;
+		
+		main.add(left,gridBagConstraint);
+		
+		gridBagConstraint.fill = GridBagConstraints.BOTH;
+		gridBagConstraint.gridx = 1;
+		gridBagConstraint.gridy = 0;
+		gridBagConstraint.gridwidth = 2;
+		gridBagConstraint.gridheight = 3;
+		gridBagConstraint.weightx = 0.66;
+		gridBagConstraint.weighty = 0.66;
+		
+		main.add(chat,gridBagConstraint);
+		
+		gridBagConstraint.fill = GridBagConstraints.BOTH;
+		gridBagConstraint.gridx = 1;
+		gridBagConstraint.gridy = 3;
+		gridBagConstraint.gridwidth = 2;
+		gridBagConstraint.gridheight = 1;
+		gridBagConstraint.weightx = 0.66;
+		gridBagConstraint.weighty = 0.33;
+		
+		
+		main.add(bottom,gridBagConstraint);
 		
 		this.add(main);
 		
-		this.setSize(350,600);
+		this.setSize(900,900);
 		this.setVisible(true);
 		
 		this.addWindowListener(c);
@@ -127,4 +179,11 @@ public class VueStandard extends Vue {
 		this.pseudoSelf.setEditable(!this.pseudoSelf.isEditable());
 	}
 	
+	protected void toggleEnableButtonDeconnexion() {
+		this.seDeconnecter.setEnabled(!this.seDeconnecter.isEnabled());
+	}
+	
+	protected void toggleEnableButtonConnexion() {
+		this.seConnecter.setEnabled(!this.seConnecter.isEnabled());
+	}
 }

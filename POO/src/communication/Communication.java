@@ -57,7 +57,7 @@ public class Communication extends Thread{
 		String idClient = datas.get(0);
 		String pseudoClient = datas.get(1);
 		int index = Communication.getIndexFromID(idClient);
-		System.out.println(index);
+//		System.out.println(index);
 		if(index != -1) {
 			Communication.users.get(index).setPseudo(pseudoClient);
 			VueStandard.userList.set(index, pseudoClient);
@@ -67,7 +67,7 @@ public class Communication extends Thread{
 	protected static synchronized void removeUser(List<String> datas) {
 		String idClient = datas.get(0);
 		int index = Communication.getIndexFromID(idClient);
-		System.out.println(index);
+		//System.out.println(index);
 		if( index != -1) {
 			Communication.users.remove(index);
 			VueStandard.userList.remove(index);
