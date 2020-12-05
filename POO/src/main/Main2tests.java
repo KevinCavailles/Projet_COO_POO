@@ -16,7 +16,7 @@ public class Main2tests {
 			e.printStackTrace();
 		}
 		try {
-			Communication comUDP = new CommunicationUDP(2906, 2905, new int[] {});
+			Communication comUDP = new CommunicationUDP(2905, 2906, new int[] {2209});
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

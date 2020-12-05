@@ -51,24 +51,34 @@ public class CommunicationUDP extends Communication {
 	// data of this agent
 	//Typically used to notify of a name change
 	public void sendMessageInfoPseudo() throws UnknownHostException, IOException {
+
 		Utilisateur self = Utilisateur.getSelf();
-		for(int port : this.portOthers) {
-			try {
-				String pseudoSelf =self.getPseudo();
-				String idSelf = self.getId();
-				Message msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, pseudoSelf, idSelf);
+		
+		String pseudoSelf =self.getPseudo();
+		String idSelf = self.getId();
+		
+		Message msout = null;
+		try {
+			msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, pseudoSelf, idSelf);
+			for(int port : this.portOthers) {
 				this.client.sendMessageUDP_local(msout, port, InetAddress.getLocalHost());
-			} catch (Exception e) {e.printStackTrace();}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+		
+		
 	}
 	
 	//Same, but on only one port
 	//Typically used to give your current name and id to a newly arrived host
 	public void sendMessageInfoPseudo(int portOther) throws UnknownHostException, IOException {
+	
 		Utilisateur self = Utilisateur.getSelf();
 		try {
-			this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, self.getPseudo(), self.getId()), portOther, InetAddress.getLocalHost());
-		} catch (MauvaisTypeMessageException e) {/*Si ça marche pas essayer là*/}
+			Message msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, self.getPseudo(), self.getId());
+			this.client.sendMessageUDP_local(msout, portOther, InetAddress.getLocalHost());
+		} catch (MauvaisTypeMessageException e) {e.printStackTrace();}
 	}
 
 

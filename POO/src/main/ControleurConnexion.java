@@ -23,7 +23,7 @@ public class ControleurConnexion implements ActionListener {
 		this.id="";
 		//Pour les tests, changer pour un truc plus général quand on change CommunicationUDP
 		try {
-			this.comUDP = new CommunicationUDP(2209, 2208, new int[] {2905});
+			this.comUDP = new CommunicationUDP(2208, 2209, new int[] {2906});
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

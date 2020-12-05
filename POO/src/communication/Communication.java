@@ -50,13 +50,22 @@ public class Communication extends Thread{
 		Communication.users.get(index).setPseudo(pseudoClient);
 		/*VueStandard.userList.set(index, pseudoClient);*/
 	}
+	
+	protected static int getIndexFromIP(InetAddress ip) {
+		for(int i=0; i < Communication.users.size() ; i++) {
+			if(Communication.users.get(i).getIp().equals(ip)) {
+				return i;
+			}
+		}
+		return -1;
+	}
 
 	
-	protected static synchronized void removeUser(String idClient, String pseudoClient, InetAddress ipClient) {
-		int index = Communication.getIndexFromID(idClient);
+	protected static synchronized void removeUser(String idClient, String pseudoClient,InetAddress ipClient) {
+		int index = Communication.getIndexFromIP(ipClient);
 		if( index != -1) {
 			Communication.users.remove(index);
-			/*VueStandard.userList.remove(index);*/
+			//VueStandard.userList.remove(index);
 		}
 	}
 	

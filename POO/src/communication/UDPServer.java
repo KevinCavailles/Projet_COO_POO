@@ -28,6 +28,7 @@ public class UDPServer extends Thread {
 		while (true) {
 
 			try {
+				
 				DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
 				this.sockUDP.receive(inPacket);
 				String msgString = new String(inPacket.getData(), 0, inPacket.getLength());
@@ -36,23 +37,25 @@ public class UDPServer extends Thread {
 				switch(msg.getTypeMessage()) {
 				case JE_SUIS_CONNECTE :	
 					//System.out.println("first co");
-					int portServer = inPacket.getPort();
-					int portClient = portServer+1;
+					int portClient = inPacket.getPort();
+					int portServer = portClient+1;
 					this.commUDP.sendMessageInfoPseudo(portServer);
 					break;
 					
 				case INFO_PSEUDO :
+					
 					if (Communication.containsUserFromID(((MessageSysteme) msg).getId())) {
 						Communication.changePseudoUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(), inPacket.getAddress()); 
 					}
 					else {
+						
 						Communication.addUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(), inPacket.getAddress());
 						System.out.println(((MessageSysteme) msg).getId()+", "+((MessageSysteme) msg).getPseudo());
 					}
 					break;
 					
 				case JE_SUIS_DECONNECTE :
-					Communication.removeUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(), inPacket.getAddress());
+					Communication.removeUser( ((MessageSysteme) msg).getId() , ((MessageSysteme) msg).getPseudo(), inPacket.getAddress() );
 					break;
 					
 				default : //Others types of messages are ignored because they are supposed to be transmitted by TCP and not UDP
