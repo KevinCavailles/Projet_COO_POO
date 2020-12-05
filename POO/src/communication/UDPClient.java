@@ -8,6 +8,8 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
+import messages.*;
+
 public class UDPClient {
 
 	private DatagramSocket sockUDP;
@@ -22,19 +24,17 @@ public class UDPClient {
 	}
 	
 	
-	//Send a string message to the specified port on localhost
-	protected void sendMessageUDP_local(String message, int port, InetAddress clientAddress) throws IOException {
-		
-		//A modifier, faire passer un type Message en paramètre
-		//puis écrire les instructions pour envoyer un Message à traver la socket
-		
-		DatagramPacket outpacket = new DatagramPacket(message.getBytes(), message.length(), clientAddress, port);
+	//Send a message casted as string to the specified port on localhost
+	protected void sendMessageUDP_local(Message message, int port, InetAddress clientAddress) throws IOException {
+		String messageString=message.toString();
+		DatagramPacket outpacket = new DatagramPacket(messageString.getBytes(), messageString.length(), clientAddress, port);
 		this.sockUDP.send(outpacket);
 		
 	}
 	
 //	protected void sendMessageUDP_broadcast(String message, int port) throws IOException{
-//		DatagramPacket outpacket = new DatagramPacket(message.getBytes(), message.length(), this.broadcast, port);
+//		String messageString=message.toString();
+//		DatagramPacket outpacket = new DatagramPacket(messageString.getBytes(), messageString.length(), this.broadcast, port);
 //		this.sockUDP.send(outpacket);
 //	}
 	

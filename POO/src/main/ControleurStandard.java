@@ -29,7 +29,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		this.vue = vue;
 		this.commUDP = new CommunicationUDP(portClient,portServer, portsOther);
 		this.commUDP.sendMessageConnecte();
-		this.commUDP.sendMessageAdd();
+		this.commUDP.sendMessageInfoPseudo();
 		this.etatModif = EtatModif.TERMINE;
 	}
 
@@ -60,7 +60,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 					Utilisateur.getSelf().setPseudo(this.vue.getDisplayedPseudo());
 
 					try {
-						this.commUDP.sendMessageModify();
+						this.commUDP.sendMessageInfoPseudo();
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
@@ -99,7 +99,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 			try {
 				Utilisateur.getSelf().setPseudo(this.vue.getDisplayedPseudo());
 				this.commUDP.sendMessageConnecte();
-				this.commUDP.sendMessageAdd();
+				this.commUDP.sendMessageInfoPseudo();
 				
 				this.vue.toggleEnableButtonConnexion();
 				this.vue.toggleEnableButtonDeconnexion();

@@ -1,5 +1,6 @@
 package communication;
 
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,35 +40,30 @@ public class Communication extends Thread{
 		return -1;
 	}
 	
-	//TODO
-	//Combiner add et change
-	protected static synchronized void addUser(List<String> datas) throws UnknownHostException {
+	protected static int getIndexFromIP(InetAddress ip) {
+		for(int i=0; i < Communication.users.size() ; i++) {
+			if(Communication.users.get(i).getIp().equals(ip)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	
+	protected static synchronized void addUser(String idClient, String pseudoClient, InetAddress ipClient) throws UnknownHostException {
+		Communication.users.add(new Utilisateur(idClient, pseudoClient, ipClient));
+		VueStandard.userList.addElement(pseudoClient);
+	}
+	
+	protected static synchronized void changePseudoUser(String idClient, String pseudoClient, InetAddress ipClient) {
+		int index = Communication.getIndexFromID(idClient);
+		Communication.users.get(index).setPseudo(pseudoClient);
+		VueStandard.userList.set(index, pseudoClient);
+	}
 
-		String idClient = datas.get(0);
-		String pseudoClient = datas.get(1);
-		String clientAddress = datas.get(2);
-		
-		if (!Communication.containsUserFromID(idClient)) {
-			Communication.users.add(new Utilisateur(idClient, pseudoClient, clientAddress));
-			VueStandard.userList.addElement(pseudoClient);
-		}
-	}
 	
-	protected static synchronized void changePseudoUser(List<String> datas) {
-		String idClient = datas.get(0);
-		String pseudoClient = datas.get(1);
-		int index = Communication.getIndexFromID(idClient);
-//		System.out.println(index);
-		if(index != -1) {
-			Communication.users.get(index).setPseudo(pseudoClient);
-			VueStandard.userList.set(index, pseudoClient);
-		}
-	}
-	
-	protected static synchronized void removeUser(List<String> datas) {
-		String idClient = datas.get(0);
-		int index = Communication.getIndexFromID(idClient);
-		//System.out.println(index);
+	protected static synchronized void removeUser(String idClient, String pseudoClient,InetAddress ipClient) {
+		int index = Communication.getIndexFromIP(ipClient);
 		if( index != -1) {
 			Communication.users.remove(index);
 			VueStandard.userList.remove(index);
