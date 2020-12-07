@@ -6,23 +6,97 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import main.Observer;
 import main.Utilisateur;
+import main.VueStandard;
 import messages.*;
 
 
-public class CommunicationUDP extends Communication {
+public class CommunicationUDP extends Thread {
 
 	// public enum Mode {PREMIERE_CONNEXION, CHANGEMENT_PSEUDO, DECONNEXION};
 
 	private UDPClient client;
 	private int portServer;
 	private ArrayList<Integer> portOthers;
+	private static ArrayList<Utilisateur> users = new ArrayList<Utilisateur>();
+	private Observer observer;
 
 	public CommunicationUDP(int portClient, int portServer, int[] portsOther) throws IOException {
 		this.portServer = portServer;
 		this.portOthers = this.getArrayListFromArray(portsOther);
 		new UDPServer(portServer, this).start();
 		this.client = new UDPClient(portClient);
+	}
+	
+	public void setObserver (Observer obs) {
+		this.observer=obs;
+	}
+	
+	protected static boolean containsUserFromID(String id) {
+		for(Utilisateur u : users) {
+			if(u.getId().equals(id) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public static boolean containsUserFromPseudo(String pseudo) {
+		for(Utilisateur u : users) {
+			if(u.getPseudo().equals(pseudo) ) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	private static int getIndexFromID(String id) {
+		for(int i=0; i < users.size() ; i++) {
+			if(users.get(i).getId().equals(id) ) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	private static int getIndexFromIP(InetAddress ip) {
+		for(int i=0; i < users.size() ; i++) {
+			if(users.get(i).getIp().equals(ip)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	
+	protected synchronized void addUser(String idClient, String pseudoClient, InetAddress ipClient) throws IOException {
+		users.add(new Utilisateur(idClient, pseudoClient, ipClient));
+		observer.update(this, users);
+		
+	}
+	
+	protected synchronized void changePseudoUser(String idClient, String pseudoClient, InetAddress ipClient) {
+		int index = getIndexFromID(idClient);
+		users.get(index).setPseudo(pseudoClient);
+		observer.update(this, users);
+	}
+
+	
+	protected synchronized void removeUser(String idClient, String pseudoClient,InetAddress ipClient) {
+		int index = getIndexFromIP(ipClient);
+		if( index != -1) {
+			users.remove(index);
+		}
+		observer.update(this, users);
+	}
+	
+	public void removeAll(){
+		int oSize = users.size();
+		for(int i=0; i<oSize;i++) {
+			users.remove(0);
+		}
 	}
 
 	private ArrayList<Integer> getArrayListFromArray(int ports[]) {

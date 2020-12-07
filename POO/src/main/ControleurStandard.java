@@ -5,15 +5,16 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.IOException;
+import java.util.ArrayList;
+
 import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import communication.Communication;
 import communication.CommunicationUDP;
 
-public class ControleurStandard implements ActionListener, ListSelectionListener, WindowListener {
+public class ControleurStandard implements ActionListener, ListSelectionListener, WindowListener, Observer {
 
 	private enum EtatModif {
 		TERMINE, EN_COURS
@@ -28,6 +29,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 	public ControleurStandard(VueStandard vue, int portClient, int portServer, int[] portsOther) throws IOException {
 		this.vue = vue;
 		this.commUDP = new CommunicationUDP(portClient,portServer, portsOther);
+		this.commUDP.setObserver(this);
 		this.commUDP.sendMessageConnecte();
 		this.commUDP.sendMessageInfoPseudo();
 		this.etatModif = EtatModif.TERMINE;
@@ -55,7 +57,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				this.etatModif = EtatModif.EN_COURS;
 			} else {
 
-				if (!Communication.containsUserFromPseudo(this.vue.getDisplayedPseudo())) {
+				if (!CommunicationUDP.containsUserFromPseudo(this.vue.getDisplayedPseudo())) {
 
 					Utilisateur.getSelf().setPseudo(this.vue.getDisplayedPseudo());
 
@@ -80,7 +82,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		if((JButton) e.getSource() == this.vue.getButtonDeconnexion() ) {
 			try {
 				this.commUDP.sendMessageDelete();
-				Communication.removeAll();
+				this.commUDP.removeAll();
 				VueStandard.userList.removeAllElements();
 				Utilisateur.getSelf().setPseudo("");
 				//Ajouter code pour passer à la vue de connexion
@@ -159,6 +161,17 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 	public void windowDeactivated(WindowEvent e) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	//---------- OBSERVER OPERATIONS ----------//
+	@Override
+	public void update(Object o, Object arg) {
+		//entre dans la fonction mais affichage pas systematique : voir si pb d'affichage ou d'argument
+		ArrayList<Utilisateur> userList = (ArrayList<Utilisateur>) arg;	
+		vue.resetListUsers();
+		for (Utilisateur user : userList) {
+			vue.addListUsers(user.getPseudo());
+		}
 	}
 
 }

@@ -186,4 +186,15 @@ public class VueStandard extends Vue {
 	protected void toggleEnableButtonConnexion() {
 		this.seConnecter.setEnabled(!this.seConnecter.isEnabled());
 	}
+	
+	//Update de la liste des utilisateurs//
+	protected void resetListUsers() {
+		VueStandard.userList = new DefaultListModel<String>();
+		this.activeUsersList = new JList<String>(VueStandard.userList);
+	}
+	
+	protected void addListUsers (String newUser) {
+		VueStandard.userList.addElement(newUser);
+	}
+	
 }
