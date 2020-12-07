@@ -20,8 +20,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.border.EmptyBorder;
+
+import communication.TCPClient;
 
 public class VueSession extends Vue {
 	
@@ -32,72 +36,51 @@ public class VueSession extends Vue {
 	
 	
 	private JButton envoyerMessage;
+	private JTextArea chatWindow;
+	private JTextField chatInput;
 	private ControleurSession c;
 
-	public VueSession(String title) throws IOException {
+	public VueSession(String title, TCPClient tcpClient) throws IOException {
 		
 		super(title);
 		
-		JPanel main = new JPanel(new BorderLayout());
-		main.setBackground(Color.green);
+		this.c = new ControleurSession(this, tcpClient);
 		
-		
-		JTextArea chatWindow  = new JTextArea();
-		
-		
-		JScrollPane chatScroll = new JScrollPane();
-		chatScroll.setPreferredSize(new Dimension(575, 600));
-		chatScroll.setBackground(Color.blue);
-		
-		JTextField chatInput = new JTextField("Entrez votre message");
-		chatInput.setPreferredSize(new Dimension(575, 150));
-		
-
-		
-		
-		
-		
-		this.c = new ControleurSession(this);
-		
-		
-		
-		
-		GridBagConstraints gridBagConstraint = new GridBagConstraints();
-		
-		gridBagConstraint.fill = GridBagConstraints.BOTH;
-		gridBagConstraint.gridx = 0;
-		gridBagConstraint.gridy = 0;
-		gridBagConstraint.gridwidth = 1;
-		gridBagConstraint.gridheight = 5;
-		gridBagConstraint.weightx = 0.33;
-		gridBagConstraint.weighty = 1;
-		
-		//main.add(left,gridBagConstraint);
-		
-		gridBagConstraint.fill = GridBagConstraints.BOTH;
-		gridBagConstraint.gridx = 1;
-		gridBagConstraint.gridy = 0;
-		gridBagConstraint.gridwidth = 2;
-		gridBagConstraint.gridheight = 3;
-		gridBagConstraint.weightx = 0.66;
-		gridBagConstraint.weighty = 0.66;
-		
-		//main.add(chat,gridBagConstraint);
-		
-		gridBagConstraint.fill = GridBagConstraints.BOTH;
-		gridBagConstraint.gridx = 1;
-		gridBagConstraint.gridy = 3;
-		gridBagConstraint.gridwidth = 2;
-		gridBagConstraint.gridheight = 1;
-		gridBagConstraint.weightx = 0.66;
-		gridBagConstraint.weighty = 0.33;
-		
-		
-		//main.add(bottom,gridBagConstraint);
-		
+		this.setBounds(100, 100, 600, 600);
+		JPanel main = new JPanel();
+		main.setBorder(new EmptyBorder(5, 5, 5, 5));
 		this.add(main);
+		main.setLayout(new BorderLayout(0, 0));
 		
-		this.setSize(900,900);
+		JPanel bottom = new JPanel();
+		main.add(bottom, BorderLayout.SOUTH);
+		bottom.setLayout(new BorderLayout(0, 0));
+		
+		this.chatInput = new JTextField();
+	
+		//textField.setPreferredSize(new Dimension(300, 50));
+		bottom.add(this.chatInput);
+		this.chatInput.setColumns(10);
+		
+		this.envoyerMessage = new JButton("Envoyer");
+		this.envoyerMessage.addActionListener(this.c);
+		
+		bottom.add(this.envoyerMessage, BorderLayout.EAST);
+		
+		this.chatWindow = new JTextArea();
+		this.chatWindow.setEditable(false);
+		
+		ScrollPane chatScroll = new ScrollPane();
+		
+		chatScroll.add(this.chatWindow);
+		
+		main.add(chatScroll, BorderLayout.CENTER);
+		
+		this.getRootPane().setDefaultButton(this.envoyerMessage);
+		
+		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+	
+		this.setSize(600,600);
 		this.setVisible(true);
 		
 	}
@@ -105,6 +88,18 @@ public class VueSession extends Vue {
 	
 	protected JButton getButtonEnvoyer() {
 		return this.envoyerMessage;
+	}
+	
+	protected JTextField getZoneSaisie() {
+		return this.chatInput;
+	}
+	
+	protected void resetZoneSaisie() {
+		this.chatInput.setText("");
+	}
+	
+	protected void appendMessage(String message) {
+		this.chatWindow.append(message);
 	}
 	
 }

@@ -15,11 +15,11 @@ public class Utilisateur implements Serializable{
 	
 	private static Utilisateur self;
 	
-	public Utilisateur(String id, String pseudo, String host) throws UnknownHostException {
+	public Utilisateur(String id, String pseudo, InetAddress ip) throws UnknownHostException {
 		this.id = id;
 		this.pseudo = pseudo;
-		this.ip = InetAddress.getLocalHost();
-		//System.out.println(InetAddress.getLocalHost());
+		this.ip = ip;
+		System.out.println(InetAddress.getLocalHost());
 	}
 
 	
@@ -41,9 +41,8 @@ public class Utilisateur implements Serializable{
 	
 	public static void setSelf(String id, String pseudo,String host) throws UnknownHostException {
 		if(Utilisateur.self == null) {
-			Utilisateur.self = new Utilisateur(id, pseudo, host);
+			Utilisateur.self = new Utilisateur(id, pseudo, InetAddress.getByName(host));
 		}
-		
 	}
 	
 	public static Utilisateur getSelf() {

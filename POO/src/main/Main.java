@@ -1,6 +1,10 @@
 package main;
 
 import java.io.IOException;
+import java.net.InetAddress;
+
+import communication.TCPClient;
+import communication.TCPServer;
 
 
 
@@ -45,7 +49,10 @@ public class Main {
 	private static void createApp(int i) {
 		try {
 			Utilisateur.setSelf(Main.ids[i], Main.pseudo[i], "localhost");
-			new VueSession("Application");	
+			System.out.println("Avant tcpcli");
+			TCPClient tcpCli = new TCPClient(InetAddress.getLocalHost(), 7001);
+			tcpCli.connexionAccepted();
+			//new VueSession("Application");	
 		} catch (IOException e) {
 			System.out.println(e.toString());	
 		}
