@@ -56,10 +56,11 @@ public class CommunicationUDP extends Communication {
 		
 		String pseudoSelf =self.getPseudo();
 		String idSelf = self.getId();
+		int portSelf = self.getPort();
 		
 		Message msout = null;
 		try {
-			msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, pseudoSelf, idSelf);
+			msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, pseudoSelf, idSelf, portSelf);
 			for(int port : this.portOthers) {
 				this.client.sendMessageUDP_local(msout, port, InetAddress.getLocalHost());
 			}
@@ -76,7 +77,7 @@ public class CommunicationUDP extends Communication {
 	
 		Utilisateur self = Utilisateur.getSelf();
 		try {
-			Message msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, self.getPseudo(), self.getId());
+			Message msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, self.getPseudo(), self.getId(), self.getPort());
 			this.client.sendMessageUDP_local(msout, portOther, InetAddress.getLocalHost());
 		} catch (MauvaisTypeMessageException e) {e.printStackTrace();}
 	}

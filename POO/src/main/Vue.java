@@ -6,6 +6,7 @@ public class Vue extends JFrame{
 
 	public Vue(String title) {
 		super(title);
+		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 	}
 	
 	public void reduireAgent() {}

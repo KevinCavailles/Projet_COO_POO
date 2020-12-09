@@ -46,17 +46,17 @@ public class UDPServer extends Thread {
 				case INFO_PSEUDO :
 					
 					if (Communication.containsUserFromID(((MessageSysteme) msg).getId())) {
-						Communication.changePseudoUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(), inPacket.getAddress()); 
+						Communication.changePseudoUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(), inPacket.getAddress(),((MessageSysteme) msg).getPort()); 
 					}
 					else {
 						
-						Communication.addUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(), inPacket.getAddress());
+						Communication.addUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(), inPacket.getAddress(), ((MessageSysteme) msg).getPort() );
 						System.out.println(((MessageSysteme) msg).getId()+", "+((MessageSysteme) msg).getPseudo());
 					}
 					break;
 					
 				case JE_SUIS_DECONNECTE :
-					Communication.removeUser( ((MessageSysteme) msg).getId() , ((MessageSysteme) msg).getPseudo(), inPacket.getAddress() );
+					Communication.removeUser( ((MessageSysteme) msg).getId() , ((MessageSysteme) msg).getPseudo(), inPacket.getAddress(), inPacket.getPort());
 					break;
 					
 				default : //Others types of messages are ignored because they are supposed to be transmitted by TCP and not UDP

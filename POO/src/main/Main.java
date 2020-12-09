@@ -2,13 +2,16 @@ package main;
 
 import java.io.IOException;
 
+import standard.VueStandard;
+
 
 
 public class Main {
 
-	private static int portServers[] = {1526,1501,1551,1561};
+	private static int portServersUDP[] = {1526,1501,1551,1561};
 	private static String ids[] = {"Raijila", "titi33", "Semtexx", "Salam"};
 	private static String pseudo[] = {"Raijila", "Mirasio", "Semtexx", "Xaegon"};
+	private static int portServersTCP[] = {1625,1600,1650,1660};
 	public static void main(String[] args) {
 		
 
@@ -44,8 +47,8 @@ public class Main {
 	
 	private static void createApp(int i) {
 		try {
-			Utilisateur.setSelf(Main.ids[i], Main.pseudo[i], "localhost");
-			new VueStandard("Application", Main.portServers[i]-1, Main.portServers[i], Main.portServers);	
+			Utilisateur.setSelf(Main.ids[i], Main.pseudo[i], "localhost", Main.portServersTCP[i]);
+			new VueStandard("Application", Main.portServersUDP[i]-1, Main.portServersUDP[i], Main.portServersUDP, Main.portServersTCP[i]);	
 		} catch (IOException e) {
 			System.out.println(e.toString());	
 		}
