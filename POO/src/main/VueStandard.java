@@ -189,12 +189,11 @@ public class VueStandard extends Vue {
 	
 	//Update de la liste des utilisateurs//
 	protected void resetListUsers() {
-		VueStandard.userList = new DefaultListModel<String>();
-		this.activeUsersList = new JList<String>(VueStandard.userList);
+		VueStandard.userList.removeAllElements();
 	}
 	
-	protected void addListUsers (String newUser) {
-		VueStandard.userList.addElement(newUser);
+	protected void addListUsers (ArrayList<String> listPseudo) {
+		VueStandard.userList.addAll(listPseudo);
 	}
 	
 }

@@ -19,7 +19,7 @@ public class Utilisateur implements Serializable{
 		this.id = id;
 		this.pseudo = pseudo;
 		this.ip = ip;
-		System.out.println(InetAddress.getLocalHost());
+		/*System.out.println(InetAddress.getLocalHost())*/;
 	}
 
 	

@@ -51,7 +51,7 @@ public class UDPServer extends Thread {
 					else {
 						
 						commUDP.addUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(), inPacket.getAddress());
-						System.out.println(((MessageSysteme) msg).getId()+", "+((MessageSysteme) msg).getPseudo());
+						//System.out.println(((MessageSysteme) msg).getId()+", "+((MessageSysteme) msg).getPseudo());
 					}
 					break;
 					
