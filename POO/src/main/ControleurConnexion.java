@@ -7,7 +7,7 @@ import java.net.UnknownHostException;
 
 import communication.*;
 
-public class ControleurConnexion implements ActionListener {
+public class ControleurConnexion implements ActionListener, Observer{
 
 	private enum Etat {DEBUT, ID_OK};
 	
@@ -17,16 +17,29 @@ public class ControleurConnexion implements ActionListener {
 	private String id;
 	private String pseudo;
 	
-	public ControleurConnexion(VueConnexion vue) {
+	public ControleurConnexion(VueConnexion vue, int numtest) {
 		this.vue = vue;
 		this.etat = Etat.DEBUT;
 		this.id="";
 		//Pour les tests, changer pour un truc plus général quand on change CommunicationUDP
 		try {
-			this.comUDP = new CommunicationUDP(2208, 2209, new int[] {2906});
+			switch(numtest) {
+			case 0 : 
+				this.comUDP = new CommunicationUDP(2208, 2209, new int[] {2309, 2409});
+				break;
+			case 1 :
+				this.comUDP = new CommunicationUDP(2308, 2309, new int[] {2209, 2409});
+				break;
+			case 2 :
+				this.comUDP = new CommunicationUDP(2408, 2409, new int[] {2209, 2309});
+				break;
+			default :
+				this.comUDP = new CommunicationUDP(2308, 2309, new int[] {2209, 2409});
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		comUDP.setObserver(this);
 	}
 	
 	@Override
@@ -36,7 +49,7 @@ public class ControleurConnexion implements ActionListener {
 			id=vue.getValeurTextField();
 			
 			//Recherche dans la liste des utilisateurs enregistres, report sur inputOK
-			inputOK = id.contentEquals("idvalide");
+			inputOK = (id.contentEquals("idvalide")||id.contentEquals("idv2"));
 			
 			if (inputOK) {
 				this.etat=Etat.ID_OK;
@@ -70,7 +83,7 @@ public class ControleurConnexion implements ActionListener {
 			pseudo=vue.getValeurTextField();
 			
 			//Recherche dans la liste locale des utilisateurs connectes, report sur inputOK
-			inputOK = !Communication.containsUserFromPseudo(pseudo);
+			inputOK = !comUDP.containsUserFromPseudo(pseudo);
 			
 			if (inputOK) {
 				//Reglage de l'utilisateur
@@ -91,11 +104,23 @@ public class ControleurConnexion implements ActionListener {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				//Creation de la vue principale
-				vue.setTexteLabelInput("Congrations you done it");
+				try {
+					//Ne se ferme pas ???????
+					vue.dispose();
+					new VueStandard("Standard", comUDP);
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}
 			else vue.setTexteLabelInput("Ce nom est déjà utilisé, veuillez en choisir un autre");
 		}
+	}
+
+	@Override
+	public void update(Object o, Object arg) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

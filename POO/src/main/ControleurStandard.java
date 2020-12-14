@@ -24,11 +24,11 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 	private VueStandard vue;
 	private CommunicationUDP commUDP;
 	private String lastPseudo;
-	private int clientPort;
-
-	public ControleurStandard(VueStandard vue, int portClient, int portServer, int[] portsOther) throws IOException {
+	
+	
+	public ControleurStandard(VueStandard vue, CommunicationUDP commUDP) throws IOException {
 		this.vue = vue;
-		this.commUDP = new CommunicationUDP(portClient,portServer, portsOther);
+		this.commUDP = commUDP;
 		this.commUDP.setObserver(this);
 		this.commUDP.sendMessageConnecte();
 		this.commUDP.sendMessageInfoPseudo();
@@ -57,7 +57,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				this.etatModif = EtatModif.EN_COURS;
 			} else {
 
-				if (!CommunicationUDP.containsUserFromPseudo(this.vue.getDisplayedPseudo())) {
+				if (!this.commUDP.containsUserFromPseudo(this.vue.getDisplayedPseudo())) {
 
 					Utilisateur.getSelf().setPseudo(this.vue.getDisplayedPseudo());
 
@@ -85,11 +85,10 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				this.commUDP.removeAll();
 				VueStandard.userList.removeAllElements();
 				Utilisateur.getSelf().setPseudo("");
-				//Ajouter code pour passer à la vue de connexion
-				//
-				//
-				this.vue.toggleEnableButtonConnexion();
-				this.vue.toggleEnableButtonDeconnexion();
+				vue.dispose();
+				new VueConnexion(0);
+				/*this.vue.toggleEnableButtonConnexion();
+				this.vue.toggleEnableButtonDeconnexion();*/
 			} catch (IOException e1) {
 				
 				e1.printStackTrace();
@@ -170,9 +169,9 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		ArrayList<Utilisateur> userList = (ArrayList<Utilisateur>) arg;	
 		ArrayList<String> listPseudo = new ArrayList<String>();
 		vue.resetListUsers();
-		System.out.println("Updated list :");
+		//System.out.println("Updated list :");
 		for (Utilisateur user : userList) {
-			System.out.println(user.getPseudo());
+			//System.out.println(user.getPseudo());
 			listPseudo.add(user.getPseudo());
 		}
 		vue.addListUsers(listPseudo);

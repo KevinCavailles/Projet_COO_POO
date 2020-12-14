@@ -7,8 +7,6 @@ import javax.swing.*;
 
 public class VueConnexion extends Vue {
 	
-	//Penser à regler la taille de la fenetre et a la centrer !
-	
 	//Elements vue
 	private JFrame frame;
 	private JPanel panel;
@@ -19,9 +17,9 @@ public class VueConnexion extends Vue {
 	//Controleur
 	ControleurConnexion controle;
 	
-	public VueConnexion() {
-		super();
-		controle = new ControleurConnexion(this);
+	public VueConnexion(int numtest) {
+		super("Connexion");
+		controle = new ControleurConnexion(this, numtest);
 		
 		//Creation fenetre
 		frame = new JFrame("Connexion");

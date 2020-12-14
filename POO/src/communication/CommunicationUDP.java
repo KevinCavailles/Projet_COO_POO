@@ -19,7 +19,7 @@ public class CommunicationUDP extends Thread {
 	private UDPClient client;
 	private int portServer;
 	private ArrayList<Integer> portOthers;
-	private static ArrayList<Utilisateur> users = new ArrayList<Utilisateur>();
+	private ArrayList<Utilisateur> users = new ArrayList<Utilisateur>();
 	private Observer observer;
 
 	public CommunicationUDP(int portClient, int portServer, int[] portsOther) throws IOException {
@@ -33,7 +33,11 @@ public class CommunicationUDP extends Thread {
 		this.observer=obs;
 	}
 	
-	protected static boolean containsUserFromID(String id) {
+	public ArrayList<Utilisateur> getListUsers(){
+		return users;
+	}
+	
+	protected boolean containsUserFromID(String id) {
 		for(Utilisateur u : users) {
 			if(u.getId().equals(id) ) {
 				return true;
@@ -42,7 +46,7 @@ public class CommunicationUDP extends Thread {
 		return false;
 	}
 	
-	public static boolean containsUserFromPseudo(String pseudo) {
+	public boolean containsUserFromPseudo(String pseudo) {
 		for(Utilisateur u : users) {
 			if(u.getPseudo().equals(pseudo) ) {
 				return true;
@@ -52,16 +56,18 @@ public class CommunicationUDP extends Thread {
 		return false;
 	}
 	
-	private static int getIndexFromID(String id) {
+	//Marche pas
+	private int getIndexFromID(String id) {
+		int index = -1;
 		for(int i=0; i < users.size() ; i++) {
-			if(users.get(i).getId().equals(id) ) {
-				return i;
+			if(users.get(i).getId().contentEquals(id) ) {
+				index=i;
 			}
 		}
-		return -1;
+		return index;
 	}
 	
-	private static int getIndexFromIP(InetAddress ip) {
+	private int getIndexFromIP(InetAddress ip) {
 		for(int i=0; i < users.size() ; i++) {
 			if(users.get(i).getIp().equals(ip)) {
 				return i;
@@ -74,7 +80,6 @@ public class CommunicationUDP extends Thread {
 	protected synchronized void addUser(String idClient, String pseudoClient, InetAddress ipClient) throws IOException {
 		users.add(new Utilisateur(idClient, pseudoClient, ipClient));
 		observer.update(this, users);
-		
 	}
 	
 	protected synchronized void changePseudoUser(String idClient, String pseudoClient, InetAddress ipClient) {
@@ -86,6 +91,7 @@ public class CommunicationUDP extends Thread {
 	
 	protected synchronized void removeUser(String idClient, String pseudoClient,InetAddress ipClient) {
 		int index = getIndexFromIP(ipClient);
+		//System.out.println("index : "+index);
 		if( index != -1) {
 			users.remove(index);
 		}
@@ -164,7 +170,7 @@ public class CommunicationUDP extends Thread {
 		for(int port : this.portOthers) {
 			try {
 				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE), port, InetAddress.getLocalHost());
-			} catch (MauvaisTypeMessageException e) {/*Si ça marche pas essayer là*/}
+			} catch (MauvaisTypeMessageException e) {}
 		}
 	}
 

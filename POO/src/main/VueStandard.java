@@ -22,6 +22,8 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 
+import communication.CommunicationUDP;
+
 public class VueStandard extends Vue {
 	
 	/**
@@ -37,8 +39,7 @@ public class VueStandard extends Vue {
 	private ControleurStandard c;
 	public static DefaultListModel<String> userList = new DefaultListModel<String>();
 	
-	
-	public VueStandard(String title, int port, int clientPort, int[] portsOther) throws IOException {
+	public VueStandard(String title, CommunicationUDP comUDP) throws IOException {
 		super(title);
 		
 		JPanel main = new JPanel(new GridBagLayout());
@@ -58,7 +59,7 @@ public class VueStandard extends Vue {
 		
 		
 		
-		this.c = new ControleurStandard(this, port, clientPort, portsOther);
+		this.c = new ControleurStandard(this, comUDP);
 		
 		//--------Panel haut pseudo--------//
 		JPanel self = new JPanel(new FlowLayout());
@@ -75,10 +76,12 @@ public class VueStandard extends Vue {
 		self.add(this.modifierPseudo);
 		
 		//--------Panel milieu liste utilisateurs--------//
+		
 		this.activeUsersList = new JList<String>(VueStandard.userList);
 		this.activeUsersList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		this.activeUsersList.setLayoutOrientation(JList.VERTICAL);
 		this.activeUsersList.addListSelectionListener(this.c);
+		
 		
 		JScrollPane listScroller = new JScrollPane(this.activeUsersList);
 		listScroller.setPreferredSize(new Dimension(50,50));
