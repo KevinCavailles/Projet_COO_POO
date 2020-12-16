@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
+
 import communication.*;
 
 public class ControleurConnexion implements ActionListener, Observer{
@@ -34,7 +35,7 @@ public class ControleurConnexion implements ActionListener, Observer{
 				this.comUDP = new CommunicationUDP(2408, 2409, new int[] {2209, 2309});
 				break;
 			default :
-				this.comUDP = new CommunicationUDP(2308, 2309, new int[] {2209, 2409});
+				this.comUDP = new CommunicationUDP(2408, 2409, new int[] {2209, 2309});
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -105,8 +106,7 @@ public class ControleurConnexion implements ActionListener, Observer{
 					e1.printStackTrace();
 				}
 				try {
-					//Ne se ferme pas ???????
-					vue.dispose();
+					vue.close();
 					new VueStandard("Standard", comUDP);
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block

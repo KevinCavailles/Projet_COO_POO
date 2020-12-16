@@ -86,7 +86,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				VueStandard.userList.removeAllElements();
 				Utilisateur.getSelf().setPseudo("");
 				vue.dispose();
-				new VueConnexion(0);
+				new VueConnexion(5);
 				/*this.vue.toggleEnableButtonConnexion();
 				this.vue.toggleEnableButtonDeconnexion();*/
 			} catch (IOException e1) {

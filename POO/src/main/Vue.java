@@ -10,6 +10,7 @@ public class Vue extends JFrame{
 	
 	public void reduireAgent() {}
 	
-	public void fermerAgent() {}
-	
+	public void close() {
+		this.dispose();
+	}
 }

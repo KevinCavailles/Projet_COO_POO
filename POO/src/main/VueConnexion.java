@@ -8,7 +8,6 @@ import javax.swing.*;
 public class VueConnexion extends Vue {
 	
 	//Elements vue
-	private JFrame frame;
 	private JPanel panel;
 	private JButton boutonValider;
 	private JTextField input;
@@ -17,15 +16,15 @@ public class VueConnexion extends Vue {
 	//Controleur
 	ControleurConnexion controle;
 	
+	//penser à enlever le numtest
 	public VueConnexion(int numtest) {
 		super("Connexion");
 		controle = new ControleurConnexion(this, numtest);
 		
 		//Creation fenetre
-		frame = new JFrame("Connexion");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setSize(400, 100);
-		frame.setLocationRelativeTo(null);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setSize(400, 100);
+		this.setLocationRelativeTo(null);
 		
 		//Creation panel
 		panel = new JPanel(new GridLayout(3,1));
@@ -34,13 +33,13 @@ public class VueConnexion extends Vue {
 		ajouterElements();
 		
 		//Regle le bouton par défaut
-		frame.getRootPane().setDefaultButton(boutonValider);
+		this.getRootPane().setDefaultButton(boutonValider);
 		
 		//Ajoute le panel a la fenetre
-		frame.getContentPane().add(panel, BorderLayout.CENTER);
+		this.getContentPane().add(panel, BorderLayout.CENTER);
 		
 		//Affiche la fenetre
-		frame.setVisible(true);
+		this.setVisible(true);
 	}
 	
 	private void ajouterElements() {
