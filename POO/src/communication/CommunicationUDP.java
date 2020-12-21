@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import main.Observer;
 import main.Utilisateur;
-import main.VueStandard;
+
 import messages.*;
 
 
@@ -20,6 +19,7 @@ public class CommunicationUDP extends Thread {
 	private int portServer;
 	private ArrayList<Integer> portOthers;
 	private ArrayList<Utilisateur> users = new ArrayList<Utilisateur>();
+
 	private Observer observer;
 
 	public CommunicationUDP(int portClient, int portServer, int[] portsOther) throws IOException {
@@ -29,12 +29,19 @@ public class CommunicationUDP extends Thread {
 		this.client = new UDPClient(portClient);
 	}
 	
-	public void setObserver (Observer obs) {
-		this.observer=obs;
+
+	private ArrayList<Integer> getArrayListFromArray(int ports[]) {
+		ArrayList<Integer> tmp = new ArrayList<Integer>();
+		for (int port : ports) {
+			tmp.add(port);
+		}
+		tmp.remove(Integer.valueOf(portServer));
+
+		return tmp;
 	}
 	
-	public ArrayList<Utilisateur> getListUsers(){
-		return users;
+	public void setObserver (Observer obs) {
+		this.observer=obs;
 	}
 	
 	protected boolean containsUserFromID(String id) {
@@ -56,15 +63,23 @@ public class CommunicationUDP extends Thread {
 		return false;
 	}
 	
-	//Marche pas
-	private int getIndexFromID(String id) {
-		int index = -1;
+	public int getPortFromPseudo(String pseudo) {
 		for(int i=0; i < users.size() ; i++) {
-			if(users.get(i).getId().contentEquals(id) ) {
-				index=i;
+			
+			if(users.get(i).getPseudo().equals(pseudo) ) {
+				return users.get(i).getPort();
 			}
 		}
-		return index;
+		return -1;
+	}
+	
+	private int getIndexFromID(String id) {
+		for(int i=0; i < users.size() ; i++) {
+			if(users.get(i).getId().equals(id) ) {
+				return i;
+			}
+		}
+		return -1;
 	}
 	
 	private int getIndexFromIP(InetAddress ip) {
@@ -77,21 +92,21 @@ public class CommunicationUDP extends Thread {
 	}
 	
 	
-	protected synchronized void addUser(String idClient, String pseudoClient, InetAddress ipClient) throws IOException {
-		users.add(new Utilisateur(idClient, pseudoClient, ipClient));
+	protected synchronized void addUser(String idClient, String pseudoClient, InetAddress ipClient, int port) throws IOException {
+		users.add(new Utilisateur(idClient, pseudoClient, ipClient, port));
 		observer.update(this, users);
+		
 	}
 	
-	protected synchronized void changePseudoUser(String idClient, String pseudoClient, InetAddress ipClient) {
+	protected synchronized void changePseudoUser(String idClient, String pseudoClient, InetAddress ipClient, int port) {
 		int index = getIndexFromID(idClient);
 		users.get(index).setPseudo(pseudoClient);
 		observer.update(this, users);
 	}
 
 	
-	protected synchronized void removeUser(String idClient, String pseudoClient,InetAddress ipClient) {
+	protected synchronized void removeUser(String idClient, String pseudoClient,InetAddress ipClient, int port) {
 		int index = getIndexFromIP(ipClient);
-		//System.out.println("index : "+index);
 		if( index != -1) {
 			users.remove(index);
 		}
@@ -103,16 +118,6 @@ public class CommunicationUDP extends Thread {
 		for(int i=0; i<oSize;i++) {
 			users.remove(0);
 		}
-	}
-
-	private ArrayList<Integer> getArrayListFromArray(int ports[]) {
-		ArrayList<Integer> tmp = new ArrayList<Integer>();
-		for (int port : ports) {
-			tmp.add(port);
-		}
-		tmp.remove(Integer.valueOf(portServer));
-
-		return tmp;
 	}
 
 	
@@ -136,10 +141,11 @@ public class CommunicationUDP extends Thread {
 		
 		String pseudoSelf =self.getPseudo();
 		String idSelf = self.getId();
+		int portSelf = self.getPort();
 		
 		Message msout = null;
 		try {
-			msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, pseudoSelf, idSelf);
+			msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, pseudoSelf, idSelf, portSelf);
 			for(int port : this.portOthers) {
 				this.client.sendMessageUDP_local(msout, port, InetAddress.getLocalHost());
 			}
@@ -156,7 +162,7 @@ public class CommunicationUDP extends Thread {
 	
 		Utilisateur self = Utilisateur.getSelf();
 		try {
-			Message msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, self.getPseudo(), self.getId());
+			Message msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, self.getPseudo(), self.getId(), self.getPort());
 			this.client.sendMessageUDP_local(msout, portOther, InetAddress.getLocalHost());
 		} catch (MauvaisTypeMessageException e) {e.printStackTrace();}
 	}

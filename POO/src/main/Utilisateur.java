@@ -12,14 +12,17 @@ public class Utilisateur implements Serializable{
 	private String id;
 	private String pseudo;
 	private InetAddress ip;
+	private int port;
 	
 	private static Utilisateur self;
 	
-	public Utilisateur(String id, String pseudo, InetAddress ip) throws UnknownHostException {
+	public Utilisateur(String id, String pseudo, InetAddress ip, int port) throws UnknownHostException {
 		this.id = id;
 		this.pseudo = pseudo;
 		this.ip = ip;
-		/*System.out.println(InetAddress.getLocalHost())*/;
+
+		this.port = port;
+
 	}
 
 	
@@ -39,13 +42,21 @@ public class Utilisateur implements Serializable{
 		return ip;
 	}
 	
-	public static void setSelf(String id, String pseudo,String host) throws UnknownHostException {
+	public int getPort() {
+		return port;
+	}
+	
+	public static void setSelf(String id, String pseudo, String host, int port) throws UnknownHostException {
 		if(Utilisateur.self == null) {
-			Utilisateur.self = new Utilisateur(id, pseudo, InetAddress.getByName(host));
+			Utilisateur.self = new Utilisateur(id, pseudo, InetAddress.getByName(host), port);
 		}
 	}
 	
 	public static Utilisateur getSelf() {
 		return Utilisateur.self;
+	}
+	
+	public static void resetSelf() {
+		Utilisateur.self = null;
 	}
 }
