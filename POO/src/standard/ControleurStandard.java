@@ -7,17 +7,16 @@ import java.awt.event.WindowListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import communication.Communication;
 import communication.CommunicationUDP;
 import communication.TCPServer;
 import main.Observer;
@@ -44,6 +43,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		this.tcpServ.start();
 		
 		this.commUDP = new CommunicationUDP(portClientUDP,portServerUDP, portsOther);
+		this.commUDP.setObserver(this);
 		this.commUDP.sendMessageConnecte();
 		this.commUDP.sendMessageInfoPseudo();
 		
@@ -63,7 +63,8 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 			int choix = this.vue.displayJOptionCreation(pseudo);
 			System.out.println("choix : "+choix);
 			if(choix == 0) {
-				int port = Communication.getPortFromPseudo(pseudo);
+				int port = CommunicationUDP.getPortFromPseudo(pseudo);
+				System.out.println("port = "+port);
 				try {
 					
 					Socket socketComm = new Socket(InetAddress.getLocalHost(), port);
@@ -114,7 +115,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				this.etatModif = EtatModif.EN_COURS;
 			} else {
 
-				if (!Communication.containsUserFromPseudo(this.vue.getDisplayedPseudo())) {
+				if (!CommunicationUDP.containsUserFromPseudo(this.vue.getDisplayedPseudo())) {
 
 					Utilisateur.getSelf().setPseudo(this.vue.getDisplayedPseudo());
 
@@ -142,8 +143,8 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		if((JButton) e.getSource() == this.vue.getButtonDeconnexion() ) {
 			try {
 				this.commUDP.sendMessageDelete();
-				Communication.removeAll();
-				VueStandard.userList.removeAllElements();
+				this.commUDP.removeAll();
+				this.vue.removeAllUsers();
 				Utilisateur.getSelf().setPseudo("");
 				//Ajouter code pour passer à la vue de connexion
 				//
@@ -252,6 +253,15 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		}
+		
+		if(o == this.commUDP) {
+			ArrayList<Utilisateur> users = (ArrayList<Utilisateur>) arg;
+			ArrayList<String> pseudos = new ArrayList<String>();
+			for (Utilisateur u : users) {
+				pseudos.add(u.getPseudo());
+			}
+			this.vue.setActiveUsersList(pseudos);
 		}
 		
 	}

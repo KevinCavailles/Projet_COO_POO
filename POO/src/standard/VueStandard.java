@@ -44,7 +44,7 @@ public class VueStandard extends Vue {
 	private JButton seDeconnecter;
 	private ControleurStandard c;
 	private HashMap<JButton,VueSession> sessions;
-	public static DefaultListModel<String> userList = new DefaultListModel<String>();
+	private DefaultListModel<String> userList = new DefaultListModel<String>();
 	
 	
 	public VueStandard(String title, int portClientUDP, int portServerUDP, int[] portsOther, int portServerTCP) throws IOException {
@@ -114,7 +114,7 @@ public class VueStandard extends Vue {
 		});
 		
 		//--------Panel milieu liste utilisateurs--------//
-		this.activeUsersList = new JList<String>(VueStandard.userList);
+		this.activeUsersList = new JList<String>(this.userList);
 		this.activeUsersList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		this.activeUsersList.setLayoutOrientation(JList.VERTICAL);
 		this.activeUsersList.addListSelectionListener(this.c);
@@ -192,8 +192,18 @@ public class VueStandard extends Vue {
 		this.addWindowListener(c);
 	}
 	
-	public JList<String> getActiveUsersList(){
+	protected JList<String> getActiveUsersList(){
 		return this.activeUsersList;
+	}
+	
+	protected void setActiveUsersList(ArrayList<String> users) {
+		this.removeAllUsers();
+		this.userList.addAll(users);
+	}
+	
+	
+	protected void removeAllUsers() {
+		this.userList.removeAllElements();
 	}
 	
 	
