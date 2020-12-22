@@ -7,6 +7,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import main.Utilisateur;
 import messages.*;
 
 
@@ -36,27 +37,33 @@ public class UDPServer extends Thread {
 				
 				switch(msg.getTypeMessage()) {
 				case JE_SUIS_CONNECTE :	
-					//System.out.println("first co");
-					int portClient = inPacket.getPort();
-					int portServer = portClient+1;
 					
-					this.commUDP.sendMessageInfoPseudo(portServer);
+					if(Utilisateur.getSelf() != null) {
+						//System.out.println("first co");
+						int portClient = inPacket.getPort();
+						int portServer = portClient+1;
+						
+						this.commUDP.sendMessageInfoPseudo(portServer);
+					}
+					
+					
 					break;
 					
 				case INFO_PSEUDO :
 					
-					if (commUDP.containsUserFromID(((MessageSysteme) msg).getId())) {
-						commUDP.changePseudoUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(), inPacket.getAddress()); 
+
+					if (this.commUDP.containsUserFromID(((MessageSysteme) msg).getId())) {
+						this.commUDP.changePseudoUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(), inPacket.getAddress(),((MessageSysteme) msg).getPort()); 
 					}
 					else {
 						
-						commUDP.addUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(), inPacket.getAddress());
-						//System.out.println(((MessageSysteme) msg).getId()+", "+((MessageSysteme) msg).getPseudo());
+						this.commUDP.addUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(), inPacket.getAddress(), ((MessageSysteme) msg).getPort() );
+						System.out.println(((MessageSysteme) msg).getId()+", "+((MessageSysteme) msg).getPseudo());
 					}
 					break;
 					
 				case JE_SUIS_DECONNECTE :
-					commUDP.removeUser( ((MessageSysteme) msg).getId() , ((MessageSysteme) msg).getPseudo(), inPacket.getAddress());
+					this.commUDP.removeUser( ((MessageSysteme) msg).getId() , ((MessageSysteme) msg).getPseudo(), inPacket.getAddress(), inPacket.getPort());
 					break;
 					
 				default : //Others types of messages are ignored because they are supposed to be transmitted by TCP and not UDP
