@@ -18,10 +18,11 @@ import communication.CommunicationUDP;
 public class ServletPresence extends HttpServlet implements Observer {
 	private static final long serialVersionUID = 1L;
 
-	//suscribe(), publish(), notify()
+	//suscribe(), publish(), snotify(), puis voir doPost
+	//Voir avant tout le fonctionnement des requetes HTTP, et comment elles donnent des infos
+	//rajouter une classe pour la communication HTTP <= tenir Kevin au courant
 	
 	private CommunicationUDP comUDP;
-	private ArrayList<Utilisateur> remoteUsers;
  
     public ServletPresence() {
     	//A changer en passant aux IP
@@ -31,7 +32,7 @@ public class ServletPresence extends HttpServlet implements Observer {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        remoteUsers = new ArrayList<Utilisateur>();
+        comUDP.setObserver(this);
     }
 
     //Permet a un utilisateur externe de s'ajouter/s'enlever à la liste des utilisateurs externes : au tout début de l'application
@@ -41,21 +42,14 @@ public class ServletPresence extends HttpServlet implements Observer {
     private void unsubscribe() { 	
     }
     
-    //Permet de dire si on est connecté/déconnecté
+    //Permet de dire si on a changé de pseudo
     private void publish() {
     }
     
-    //Informe de la modification de la liste tous les utilisateurs internes et externes
+    //Informe de la modification de la liste tous les utilisateurs internes et externes => par reponse HTTP
     private void snotify() {
     	
     }
-    
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
-	}
 
 	/**
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)

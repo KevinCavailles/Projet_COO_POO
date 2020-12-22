@@ -1,9 +1,11 @@
-package main;
+package connexion;
 
 //Importe les librairies
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+
+import main.Vue;
 
 public class VueConnexion extends Vue {
 	
