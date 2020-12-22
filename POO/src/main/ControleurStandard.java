@@ -165,13 +165,10 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 	//---------- OBSERVER OPERATIONS ----------//
 	@Override
 	public void update(Object o, Object arg) {
-		//entre dans la fonction mais affichage pas systematique : voir si pb d'affichage ou d'argument
 		ArrayList<Utilisateur> userList = (ArrayList<Utilisateur>) arg;	
 		ArrayList<String> listPseudo = new ArrayList<String>();
 		vue.resetListUsers();
-		//System.out.println("Updated list :");
 		for (Utilisateur user : userList) {
-			//System.out.println(user.getPseudo());
 			listPseudo.add(user.getPseudo());
 		}
 		vue.addListUsers(listPseudo);

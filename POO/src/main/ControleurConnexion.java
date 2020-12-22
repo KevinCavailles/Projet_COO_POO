@@ -118,9 +118,8 @@ public class ControleurConnexion implements ActionListener, Observer{
 	}
 
 	@Override
-	public void update(Object o, Object arg) {
-		// TODO Auto-generated method stub
-		
+	//Rien a faire : pas d'affichage de la liste des utilisateurs connectés durant la phase de connexion
+	public void update(Object o, Object arg) {	
 	}
 
 }

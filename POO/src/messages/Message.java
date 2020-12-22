@@ -1,17 +1,13 @@
 package messages;
 
 import java.io.Serializable;
-import java.lang.instrument.Instrumentation;
-import java.util.Arrays;
 
-import messages.Message.TypeMessage;
 
 public abstract class Message implements Serializable {
 
 	public enum TypeMessage {JE_SUIS_CONNECTE, JE_SUIS_DECONNECTE, INFO_PSEUDO, TEXTE, IMAGE, FICHIER, MESSAGE_NUL}
 	protected TypeMessage type;
 	private static final long serialVersionUID = 1L;
-	private static Instrumentation inst;
 
 	public TypeMessage getTypeMessage() {
 		return this.type;
