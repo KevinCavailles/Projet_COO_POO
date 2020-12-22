@@ -26,7 +26,7 @@ public class UDPClient {
 	
 	//Send a message casted as string to the specified port on localhost
 	protected void sendMessageUDP_local(Message message, int port, InetAddress clientAddress) throws IOException {
-		String messageString=message.toString();
+		String messageString= message.toString();
 		DatagramPacket outpacket = new DatagramPacket(messageString.getBytes(), messageString.length(), clientAddress, port);
 		this.sockUDP.send(outpacket);
 		
