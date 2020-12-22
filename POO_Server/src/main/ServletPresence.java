@@ -9,20 +9,28 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import communication.CommunicationUDP;
+
 /**
  * Servlet implementation class ServletPresence
  */
 @WebServlet("/ServletPresence")
-public class ServletPresence extends HttpServlet {
+public class ServletPresence extends HttpServlet implements Observer {
 	private static final long serialVersionUID = 1L;
 
 	//suscribe(), publish(), notify()
 	
-	private ArrayList<Utilisateur> localUsers;
+	private CommunicationUDP comUDP;
 	private ArrayList<Utilisateur> remoteUsers;
  
     public ServletPresence() {
-        localUsers = new ArrayList<Utilisateur>();
+    	//A changer en passant aux IP
+        try {
+			comUDP = new CommunicationUDP(3333, 3334, new int[0]);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         remoteUsers = new ArrayList<Utilisateur>();
     }
 
@@ -37,7 +45,7 @@ public class ServletPresence extends HttpServlet {
     private void publish() {
     }
     
-    //Informe de la modification de la liste tous les utilisateurs iinternes et externes
+    //Informe de la modification de la liste tous les utilisateurs internes et externes
     private void snotify() {
     	
     }
@@ -55,6 +63,12 @@ public class ServletPresence extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		doGet(request, response);
+	}
+
+	@Override
+	//Rien a faire : pas d'affichage sur un serveur
+	public void update(Object o, Object arg) {
+		
 	}
 
 }
