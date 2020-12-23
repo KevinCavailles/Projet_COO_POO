@@ -106,7 +106,7 @@ public class CommunicationUDP extends Thread {
 
 	
 	protected synchronized void removeUser(String idClient, String pseudoClient,InetAddress ipClient, int port) {
-		int index = getIndexFromIP(ipClient);
+		int index = getIndexFromID(idClient);
 		if( index != -1) {
 			users.remove(index);
 		}
@@ -124,7 +124,7 @@ public class CommunicationUDP extends Thread {
 	public void sendMessageConnecte() throws UnknownHostException, IOException {
 		for(int port : this.portOthers) {
 			try {
-				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_CONNECTE), port, InetAddress.getLocalHost());
+				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_CONNECTE, Utilisateur.getSelf().getId()), port, InetAddress.getLocalHost());
 			} catch (MauvaisTypeMessageException e) {/*Si ça marche pas essayer là*/}
 		}
 	}
@@ -175,7 +175,7 @@ public class CommunicationUDP extends Thread {
 	public void sendMessageDelete() throws UnknownHostException, IOException {
 		for(int port : this.portOthers) {
 			try {
-				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE), port, InetAddress.getLocalHost());
+				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, Utilisateur.getSelf().getId()), port, InetAddress.getLocalHost());
 			} catch (MauvaisTypeMessageException e) {}
 		}
 	}
