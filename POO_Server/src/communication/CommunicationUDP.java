@@ -13,8 +13,6 @@ import messages.*;
 
 public class CommunicationUDP extends Thread {
 
-	// public enum Mode {PREMIERE_CONNEXION, CHANGEMENT_PSEUDO, DECONNEXION};
-
 	private UDPClient client;
 	private int portServer;
 	private ArrayList<Integer> portOthers;
@@ -82,6 +80,15 @@ public class CommunicationUDP extends Thread {
 		return -1;
 	}
 	
+	public Utilisateur getUserFromID(String id) {
+		for(Utilisateur u : users) {
+			if(u.getId().equals(id) ) {
+				return u;
+			}
+		}
+		return null;
+	}
+	
 	private int getIndexFromIP(InetAddress ip) {
 		for(int i=0; i < users.size() ; i++) {
 			if(users.get(i).getIp().equals(ip)) {
@@ -94,23 +101,37 @@ public class CommunicationUDP extends Thread {
 	
 	protected synchronized void addUser(String idClient, String pseudoClient, InetAddress ipClient, int port) throws IOException {
 		users.add(new Utilisateur(idClient, pseudoClient, ipClient, port));
-		observer.update(this, users);
-		
+		try {
+			Message message = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, idClient, pseudoClient, port);
+			observer.update(this, message);
+		} catch (MauvaisTypeMessageException e) {
+			e.printStackTrace();
+		}		
 	}
 	
 	protected synchronized void changePseudoUser(String idClient, String pseudoClient, InetAddress ipClient, int port) {
 		int index = getIndexFromID(idClient);
 		users.get(index).setPseudo(pseudoClient);
-		observer.update(this, users);
+		try {
+			Message message = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, idClient, pseudoClient, port);
+			observer.update(this, message);
+		} catch (MauvaisTypeMessageException e) {
+			e.printStackTrace();
+		}
 	}
 
 	
 	protected synchronized void removeUser(String idClient, String pseudoClient,InetAddress ipClient, int port) {
-		int index = getIndexFromIP(ipClient);
+		int index = getIndexFromID(idClient);
 		if( index != -1) {
 			users.remove(index);
 		}
-		observer.update(this, users);
+		try {
+			Message message = new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, idClient, pseudoClient, port);
+			observer.update(this, message);
+		} catch (MauvaisTypeMessageException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void removeAll(){
@@ -124,7 +145,7 @@ public class CommunicationUDP extends Thread {
 	public void sendMessageConnecte() throws UnknownHostException, IOException {
 		for(int port : this.portOthers) {
 			try {
-				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_CONNECTE), port, InetAddress.getLocalHost());
+				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_CONNECTE, Utilisateur.getSelf().getId()), port, InetAddress.getLocalHost());
 			} catch (MauvaisTypeMessageException e) {/*Si ça marche pas essayer là*/}
 		}
 	}
@@ -152,8 +173,6 @@ public class CommunicationUDP extends Thread {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		
 	}
 	
 	//Same, but on only one port
@@ -175,8 +194,30 @@ public class CommunicationUDP extends Thread {
 	public void sendMessageDelete() throws UnknownHostException, IOException {
 		for(int port : this.portOthers) {
 			try {
-				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE), port, InetAddress.getLocalHost());
+				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, Utilisateur.getSelf().getId()), port, InetAddress.getLocalHost());
 			} catch (MauvaisTypeMessageException e) {}
+		}
+	}
+	
+	//Broadcast a given message on the local network
+	public void sendMessage(Message m) {
+		try {
+			for(int port : this.portOthers) {
+				this.client.sendMessageUDP_local(m, port, InetAddress.getLocalHost());
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	//Send a given message to a specific user (here, by port)
+	public void sendMessage(Message m, int port) {
+		try {
+			this.client.sendMessageUDP_local(m, port, InetAddress.getLocalHost());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
