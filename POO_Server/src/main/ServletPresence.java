@@ -18,6 +18,9 @@ import messages.Message.TypeMessage;
  * Servlet implementation class ServletPresence
  */
 @WebServlet("/ServletPresence")
+
+
+//Penser a modifier comUDP et comTCP pour un serveur !!! (ie pseudo predefini, n'accepte pas les connexions tcp etc)
 public class ServletPresence extends HttpServlet implements Observer {
 	private static final long serialVersionUID = 1L;
 	
