@@ -59,4 +59,8 @@ public class Utilisateur implements Serializable{
 	public static void resetSelf() {
 		Utilisateur.self = null;
 	}
+	
+	public String toString(){
+		return id + "###" + pseudo;
+	}
 }

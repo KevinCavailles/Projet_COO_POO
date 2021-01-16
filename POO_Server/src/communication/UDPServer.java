@@ -34,7 +34,7 @@ public class UDPServer extends Thread {
 				this.sockUDP.receive(inPacket);
 				String msgString = new String(inPacket.getData(), 0, inPacket.getLength());
 				Message msg = Message.stringToMessage(msgString);
-				
+
 				switch(msg.getTypeMessage()) {
 				case JE_SUIS_CONNECTE :	
 					
@@ -44,6 +44,7 @@ public class UDPServer extends Thread {
 						int portServer = portClient+1;
 						
 						this.commUDP.sendMessageInfoPseudo(portServer);
+						this.commUDP.getObserver().update(this, portServer);
 					}
 					
 					

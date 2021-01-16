@@ -42,6 +42,10 @@ public class CommunicationUDP extends Thread {
 		this.observer=obs;
 	}
 	
+	public Observer getObserver () {
+		return this.observer;
+	}
+	
 	protected boolean containsUserFromID(String id) {
 		for(Utilisateur u : users) {
 			if(u.getId().equals(id) ) {
@@ -50,6 +54,7 @@ public class CommunicationUDP extends Thread {
 		}
 		return false;
 	}
+	
 	
 	public boolean containsUserFromPseudo(String pseudo) {
 		for(Utilisateur u : users) {
@@ -127,7 +132,7 @@ public class CommunicationUDP extends Thread {
 			users.remove(index);
 		}
 		try {
-			Message message = new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, idClient, pseudoClient, port);
+			Message message = new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, idClient);
 			observer.update(this, message);
 		} catch (MauvaisTypeMessageException e) {
 			e.printStackTrace();

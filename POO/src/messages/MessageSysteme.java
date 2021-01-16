@@ -7,11 +7,11 @@ public class MessageSysteme extends Message {
 	private String id;
 	private int port;
 
-	public MessageSysteme(TypeMessage type, String id) throws MauvaisTypeMessageException{
+	public MessageSysteme(TypeMessage type) throws MauvaisTypeMessageException{
 		if ((type==TypeMessage.JE_SUIS_CONNECTE)||(type==TypeMessage.JE_SUIS_DECONNECTE)||(type==TypeMessage.MESSAGE_NUL)) {
 			this.type=type;
 			this.pseudo="";
-			this.id=id;
+			this.id="";
 			this.port = -1;
 		}
 		else throw new MauvaisTypeMessageException();

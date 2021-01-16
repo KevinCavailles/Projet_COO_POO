@@ -1,5 +1,7 @@
 package messages;
 
+import messages.Message.TypeMessage;
+
 public class MessageTexte extends Message {
 	
 

@@ -30,19 +30,19 @@ public class ControleurConnexion implements ActionListener, Observer{
 		try {
 			switch(numtest) {
 			case 0 : 
-				this.comUDP = new CommunicationUDP(2208, 2209, new int[] {2309, 2409});
+				this.comUDP = new CommunicationUDP(2208, 2209, new int[] {2309, 2409, 3334});
 				this.portTCP = 7010;
 				break;
 			case 1 :
-				this.comUDP = new CommunicationUDP(2308, 2309, new int[] {2209, 2409});
+				this.comUDP = new CommunicationUDP(2308, 2309, new int[] {2209, 2409, 3334});
 				this.portTCP = 7020;
 				break;
 			case 2 :
-				this.comUDP = new CommunicationUDP(2408, 2409, new int[] {2209, 2309});
+				this.comUDP = new CommunicationUDP(2408, 2409, new int[] {2209, 2309, 3334});
 				this.portTCP = 7030;
 				break;
 			default :
-				this.comUDP = new CommunicationUDP(2408, 2409, new int[] {2209, 2309});
+				this.comUDP = new CommunicationUDP(2408, 2409, new int[] {2209, 2309, 3334});
 				this.portTCP = 7040;
 			}
 		} catch (IOException e) {
@@ -58,7 +58,7 @@ public class ControleurConnexion implements ActionListener, Observer{
 			id=vue.getValeurTextField();
 			
 			//Recherche dans la liste des utilisateurs enregistres, report sur inputOK
-			inputOK = (id.contentEquals("idvalide")||id.contentEquals("idv2"));
+			inputOK = (id.contentEquals("idvalide")||id.contentEquals("idv2")||id.contentEquals("idv2"));
 			
 			if (inputOK) {
 				this.etat=Etat.ID_OK;
