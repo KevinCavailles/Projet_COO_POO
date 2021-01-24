@@ -5,33 +5,57 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 
 import javax.swing.JButton;
-import javax.swing.JList;
+import javax.swing.JFileChooser;
 
-import java.util.concurrent.*;
-
-import communication.TCPClient;
-import main.Observer;
+import communication.filetransfer.FileTransferClient;
+import communication.filetransfer.FileTransferServer;
+import communication.tcp.TCPClient;
+import database.SQLiteManager;
 import main.Utilisateur;
 import messages.MauvaisTypeMessageException;
 import messages.Message;
+import messages.MessageFichier;
 import messages.MessageTexte;
+import messages.Message.TypeMessage;
+import observers.ObserverInputMessage;
+import observers.ObserverSocketState;
 
-public class ControleurSession implements ActionListener, Observer, KeyListener {
+public class ControleurSession implements ActionListener, ObserverInputMessage, ObserverSocketState, KeyListener {
 
 	private VueSession vue;
+	private String idOther;
+	private String pseudoOther;
 	private TCPClient tcpClient;
-
-	protected ControleurSession(VueSession vue, Socket socketComm) throws IOException {
+	private ArrayList<Message> messagesIn;
+	private ArrayList<Message> messagesOut;
+	private SQLiteManager sqlManager;
+	private ArrayList<File> files;
+	
+	protected ControleurSession(VueSession vue, Socket socketComm, String idOther, String pseudoOther, SQLiteManager sqlManager) throws IOException {
 		this.vue = vue;
 		this.tcpClient = new TCPClient(socketComm);
 		this.tcpClient.setObserverInputThread(this);
+		this.tcpClient.setObserverSocketState(this);
 		this.tcpClient.startInputThread();
+		this.messagesIn = new ArrayList<Message>();
+		this.messagesOut = new ArrayList<Message>();
+		
+		this.idOther = idOther;
+		this.pseudoOther = pseudoOther;
+		
+		this.sqlManager = sqlManager;
+		
+		this.files = new ArrayList<File>();
 	}
 
 	// ---------- ACTION LISTENER OPERATIONS ----------//
@@ -40,16 +64,33 @@ public class ControleurSession implements ActionListener, Observer, KeyListener 
 
 		//Quand le bouton envoyer est presse
 		if ((JButton) e.getSource() == this.vue.getButtonEnvoyer()) {
-			String messageOut = this.vue.getZoneSaisie().getText();
-			System.out.println(messageOut);
+			String messageContent = this.vue.getInputedText();
+			System.out.println(messageContent);
 			
-			//Si le texte field n'est pas vide
-			if (!messageOut.equals("")) {
+			if(!this.files.isEmpty()) {
+				this.processSelectedFiles(messageContent);
+				if(!this.files.isEmpty()) {
+					this.askFileTransfer();
+					
+					this.vue.resetZoneSaisie();
+					messageContent = "";
+				}
+			}
+			
+			
+			//If the text field is not empty
+			if (!messageContent.equals("")) {
 				
-				//On recupere la date et on prepare les messages a afficher/envoyer
-				String date = this.getDateAndTime();
-				String messageToDisplay = date+" Moi : "+ messageOut;
-				messageOut = date +" "+ Utilisateur.getSelf().getPseudo() + " : " + messageOut+"\n";
+				//Retrieve the date and prepare the messages to send/display
+				MessageTexte messageOut = null;
+	
+				try {
+					messageOut = new MessageTexte(TypeMessage.TEXTE, messageContent);
+					messageOut.setSender(Utilisateur.getSelf().getPseudo());
+				} catch (MauvaisTypeMessageException e2) {
+					e2.printStackTrace();
+				}
+				
 				
 				try {
 					this.tcpClient.sendMessage(messageOut);	
@@ -58,28 +99,33 @@ public class ControleurSession implements ActionListener, Observer, KeyListener 
 					e1.printStackTrace();
 				}
 				
-				this.vue.appendMessage(messageToDisplay + "\n");
+				messageOut.setSender("Moi");
+				this.vue.appendMessage(messageOut);
 				this.vue.resetZoneSaisie();
+				
+				this.messagesOut.add(messageOut);
 			}
+		}
+		
+		if((JButton) e.getSource() == this.vue.getButtonImportFile()) {
+			JFileChooser fc = new JFileChooser();
+			fc.setMultiSelectionEnabled(true);
+			int returVal = fc.showDialog(this.vue, "Importer");
+		
+			
+			if(returVal == JFileChooser.APPROVE_OPTION) {
+				File[] files = fc.getSelectedFiles();
+				Collections.addAll(this.files, files);
+				for(File file : files) {
+					this.vue.appendInputedText(file.getName());
+					this.vue.appendInputedText(";");
+				}
+			}
+			
 		}
 
 	}
-
-	//Methode appelee quand l'inputStream de la socket de communication recoit des donnees
-	@Override
-	public void update(Object o, Object arg) {
-		MessageTexte messageIn = (MessageTexte) arg;
-		System.out.println(messageIn.getContenu());
-		this.vue.appendMessage(messageIn.getContenu());
-	}
-
 	
-	
-	private String getDateAndTime() {
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-		LocalDateTime now = LocalDateTime.now();
-		return "<"+dtf.format(now)+">";
-	}
 
 	@Override
 	public void keyTyped(KeyEvent e) {
@@ -101,6 +147,130 @@ public class ControleurSession implements ActionListener, Observer, KeyListener 
 	public void keyReleased(KeyEvent e) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	
+	protected ArrayList<Message> getHistorique(){
+		try {
+			ArrayList<Message> historique = this.sqlManager.getHistoriquesMessages(idOther, pseudoOther);
+			return historique;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return new ArrayList<Message>();
+			
+		}
+	}
+	
+	private void processSelectedFiles(String input) {
+			int nbFile = this.files.size();
+			String[] tmp = input.split(";");
+			ArrayList<String> potentialFiles = new ArrayList<String>();
+			Collections.addAll(potentialFiles, tmp);
+			
+			for(File file: this.files) {
+				if(!potentialFiles.contains(file.getName()) ) {
+					this.files.remove(file);
+				}
+			}
+	}
+	
+	private void askFileTransfer() {
+		try {
+			MessageFichier messageOut = new MessageFichier(TypeMessage.FICHIER_INIT, ""+this.files.size(), "");
+			this.tcpClient.sendMessage(messageOut);
+		} catch (MauvaisTypeMessageException | IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+	
+	private void answerFileTransfer(int port) {
+		try {
+			MessageFichier messageOut = new MessageFichier(TypeMessage.FICHIER_ANSWER, ""+port, "");
+			this.tcpClient.sendMessage(messageOut);
+		} catch (MauvaisTypeMessageException | IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+	
+	//Methode appelee quand l'inputStream de la socket de communication recoit des donnees
+	@Override
+	public void update(Object o, Object arg) {
+		Message message = (Message) arg;
+		switch(message.getTypeMessage()) {
+		case TEXTE:
+			System.out.println(message.toString());
+			this.vue.appendMessage(message);
+			this.messagesIn.add(message);
+			break;
+		case IMAGE:
+			this.vue.appendImage(message);
+			
+			if(message.getSender().equals("Moi")) {
+				this.messagesOut.add(message);
+			}else {
+				this.messagesIn.add(message);
+			}
+			break;
+		case FICHIER:
+			this.vue.appendMessage(message);
+			
+			if(message.getSender().equals("Moi")) {
+				this.messagesOut.add(message);
+			}else {
+				this.messagesIn.add(message);
+			}
+			break;
+		case FICHIER_INIT:
+			try {
+				MessageFichier mFichier = (MessageFichier) arg;
+				int nbFile = Integer.parseInt(mFichier.getContenu());
+				FileTransferServer fts = new FileTransferServer(nbFile, this);
+				int port = fts.getPort();
+				fts.start();
+				this.answerFileTransfer(port);
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
+		case FICHIER_ANSWER:
+			try {
+				MessageFichier mFichier = (MessageFichier) arg;
+				int port = Integer.parseInt(mFichier.getContenu());
+				FileTransferClient ftc = new FileTransferClient(port ,(ArrayList<File>) this.files.clone(), this);
+				ftc.sendFiles();
+				this.files.clear();
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			break;
+		default:
+		}
+		
+	}
+
+	@Override
+	public void updateSocketState(Object o, Object arg) {
+		this.vue.endSession(this.pseudoOther);	
+	}
+	
+	protected void destroyAll() {
+		String idSelf = Utilisateur.getSelf().getId();
+		String idOther = this.idOther;
+		
+		try {
+			this.sqlManager.insertAllMessages(messagesOut, idSelf, idOther);
+			this.sqlManager.insertAllMessages(messagesIn, idOther, idSelf);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		this.vue = null;
+		this.tcpClient.destroyAll();
+		this.tcpClient = null;
 	}
 
 }

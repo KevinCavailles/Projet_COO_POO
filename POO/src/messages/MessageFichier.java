@@ -1,6 +1,6 @@
 package messages;
 
-import messages.Message.TypeMessage;
+import main.Utilisateur;
 
 public class MessageFichier extends Message {
 	
@@ -10,10 +10,11 @@ public class MessageFichier extends Message {
 	private String extension;
 
 	public MessageFichier(TypeMessage type, String contenu, String extension) throws MauvaisTypeMessageException{
-		if ((type==TypeMessage.IMAGE)||(type==TypeMessage.FICHIER)) {
+		if ((type==TypeMessage.IMAGE)||(type==TypeMessage.FICHIER) ||(type==TypeMessage.FICHIER_INIT) || (type==TypeMessage.FICHIER_ANSWER) ) {
 			this.type=type;
 			this.contenu=contenu;
 			this.extension=extension;
+			this.setDateMessage(Message.getDateAndTime());
 		}
 		else throw new MauvaisTypeMessageException();
 	}
@@ -29,5 +30,19 @@ public class MessageFichier extends Message {
 	@Override
 	protected String attributsToString() {
 		return this.contenu+"###"+this.extension;
+	}
+	
+	public String toString() {
+		if(this.type == TypeMessage.IMAGE) {
+			return this.contenu;
+		}else {
+			String suffixe;
+			if(this.getSender().equals("Moi")) {
+				suffixe = "envoyé\n";
+			}else {
+				suffixe = "reçu\n";
+			}
+			return "<"+this.getDateMessage()+"> : "+this.contenu+" "+suffixe;
+		}
 	}
 }

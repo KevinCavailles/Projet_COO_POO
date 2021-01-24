@@ -17,25 +17,30 @@ import javax.swing.JList;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import communication.CommunicationUDP;
-import communication.TCPServer;
-import main.Observer;
+import communication.tcp.TCPServer;
+import communication.udp.CommunicationUDP;
+import database.SQLiteManager;
 import main.Utilisateur;
+import observers.ObserverInputMessage;
+import observers.ObserverSocketState;
+import observers.ObserverUserList;
 import session.VueSession;
 
-public class ControleurStandard implements ActionListener, ListSelectionListener, WindowListener, Observer {
+public class ControleurStandard implements ActionListener, ListSelectionListener, WindowListener, ObserverInputMessage, ObserverUserList, ObserverSocketState {
 
-	private enum EtatModif {
+	private enum ModifPseudo {
 		TERMINE, EN_COURS
 	}
 
-	private EtatModif etatModif;
+	private ModifPseudo modifPseudo;
 	private VueStandard vue;
 	private CommunicationUDP commUDP;
 	private String lastPseudo;
 	private TCPServer tcpServ;
+	private ArrayList<String> idsSessionEnCours;
+	private SQLiteManager sqlManager;
 
-	public ControleurStandard(VueStandard vue, int portClientUDP, int portServerUDP, int[] portsOther, int portServerTCP) throws IOException {
+	public ControleurStandard(VueStandard vue, int portClientUDP, int portServerUDP, int[] portsOther, int portServerTCP, SQLiteManager sqlManager) throws IOException {
 		this.vue = vue;
 		
 		this.tcpServ = new TCPServer(portServerTCP);
@@ -47,55 +52,68 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		this.commUDP.sendMessageConnecte();
 		this.commUDP.sendMessageInfoPseudo();
 		
-		this.etatModif = EtatModif.TERMINE;
+		this.idsSessionEnCours = new ArrayList<String>();
+		
+		this.sqlManager = sqlManager;
+		
+		this.modifPseudo = ModifPseudo.TERMINE;
 	}
 
 	//---------- LISTSELECTION LISTENER OPERATIONS ----------//
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
 		
-		//Cas où un élément de la liste est sélectionné
-		if (this.vue.getActiveUsersList().isFocusOwner() && !e.getValueIsAdjusting()) {
+		int a = 5;
+		
+		//Case when a list element is selected
+		if (this.vue.getActiveUsersList().isFocusOwner() && !e.getValueIsAdjusting() && this.vue.getActiveUsersList().getSelectedValue() != null) {
 			
 			JList<String> list = this.vue.getActiveUsersList();
-			String pseudo = list.getSelectedValue();
+			String pseudoOther = list.getSelectedValue();
+			Utilisateur other = this.commUDP.getUserFromPseudo(pseudoOther);
+			String idOther = other.getId();
 			
-			int choix = this.vue.displayJOptionCreation(pseudo);
-			System.out.println("choix : "+choix);
-			if(choix == 0) {
-				int port = CommunicationUDP.getPortFromPseudo(pseudo);
-				System.out.println("port = "+port);
-				try {
-					
-					Socket socketComm = new Socket(InetAddress.getLocalHost(), port);
-
-					this.sendMessage(socketComm, Utilisateur.getSelf().getPseudo());
-					
-					String reponse = this.readMessage(socketComm);
-					
-					
-					System.out.println("reponse : " + reponse);
-					
-					if(reponse.contains("accepted")) {
+			//Check if we are already asking for a session/chatting with the person selected
+			//null condition because the list.clearSelection() generates an event
+			if(!this.idsSessionEnCours.contains(idOther)) {
+				
+				int choix = this.vue.displayJOptionSessionCreation(pseudoOther);
+				System.out.println("choix : "+choix);
+				
+				if(choix == 0) {
+					int port = other.getPort();
+					System.out.println("port = "+port);
+					try {
 						
-						this.vue.displayJOptionResponse("acceptée");
-						this.vue.addSession(pseudo, new VueSession(socketComm));
+						Socket socketComm = new Socket(InetAddress.getLocalHost(), port);
+						this.sendMessage(socketComm, Utilisateur.getSelf().getPseudo());
+						String reponse = this.readMessage(socketComm);
+		
+						System.out.println("reponse : " + reponse);
 						
-					}else{
-						this.vue.displayJOptionResponse("refusée");
-						socketComm.close();
-						System.out.println("refused");
+						if(reponse.equals("accepted")) {
+							this.idsSessionEnCours.add(idOther);
+							
+							VueSession session = new VueSession(socketComm, idOther, pseudoOther, this.sqlManager);
+							this.vue.addSession(pseudoOther, session);
+							
+							this.vue.displayJOptionResponse("acceptee");
+							
+						}else{
+							this.vue.displayJOptionResponse("refusee");
+							socketComm.close();
+							System.out.println("refused");
+						}
+						
+					} catch (IOException e1) {
+						e1.printStackTrace();
 					}
-					
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
 				}
 				
 			}
 			
-			this.vue.getButtonModifierPseudo().requestFocus();
-			System.out.println("pseudo de la personne a atteindre : " + pseudo);
+			list.clearSelection();
+			System.out.println("pseudo de la personne a atteindre : " + pseudoOther);
 			
 		}
 	}
@@ -109,14 +127,14 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		if ((JButton) e.getSource() == this.vue.getButtonModifierPseudo()) {
 			JButton modifierPseudo = (JButton) e.getSource();
 
-			if (this.etatModif == EtatModif.TERMINE) {
+			if (this.modifPseudo == ModifPseudo.TERMINE) {
 				this.lastPseudo = Utilisateur.getSelf().getPseudo();
 				modifierPseudo.setText("OK");
-				this.etatModif = EtatModif.EN_COURS;
+				this.modifPseudo = ModifPseudo.EN_COURS;
 			} else {
 
-				if (!CommunicationUDP.containsUserFromPseudo(this.vue.getDisplayedPseudo())) {
-
+				if (this.vue.getDisplayedPseudo().length() >= 1 && !this.commUDP.containsUserFromPseudo(this.vue.getDisplayedPseudo().toLowerCase())) {
+					
 					Utilisateur.getSelf().setPseudo(this.vue.getDisplayedPseudo());
 
 					try {
@@ -131,7 +149,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				}
 
 				modifierPseudo.setText("Modifier");
-				this.etatModif = EtatModif.TERMINE;
+				this.modifPseudo = ModifPseudo.TERMINE;
 			}
 
 			this.vue.toggleEditPseudo();
@@ -140,7 +158,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		
 		
 		//Cas deconnexion
-		if((JButton) e.getSource() == this.vue.getButtonDeconnexion() ) {
+		else if((JButton) e.getSource() == this.vue.getButtonDeconnexion() ) {
 			try {
 				this.commUDP.sendMessageDelete();
 				this.commUDP.removeAll();
@@ -171,6 +189,12 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				
 				e1.printStackTrace();
 			}
+		}
+		
+		else if(this.vue.isButtonTab(e.getSource()) ){
+			JButton button = (JButton) e.getSource();
+			int index = this.vue.removeSession(button);
+			this.idsSessionEnCours.remove(index);
 		}
 	}
 	
@@ -224,26 +248,52 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		// TODO Auto-generated method stub
 		
 	}
+	
+	
+	//------------SOCKET-------------//
+	
+	private void sendMessage(Socket sock, String message) throws IOException {
+		PrintWriter output= new PrintWriter(sock.getOutputStream(), true);
+			output.println(message);
+	}
+	
+	private String readMessage(Socket sock) throws IOException {
+		
+		BufferedReader input = new BufferedReader(new InputStreamReader( sock.getInputStream() ));
+		return input.readLine();
+	}
 
+	
+	//------------OBSERVERS-------------//
+	
 	@Override
 	public void update(Object o, Object arg) {
+		
 		if(o == this.tcpServ) {
 			
 			Socket sockAccept = (Socket) arg;
 			
 			try {
 				
-				String pseudo = this.readMessage(sockAccept);
+				String pseudoOther = this.readMessage(sockAccept);
+				String idOther = this.commUDP.getUserFromPseudo(pseudoOther).getId();
+				 
+				int reponse;
 						
-				int reponse = this.vue.displayJOptionDemande(pseudo);
-				
-				System.out.println("reponse : " + reponse);
+				if(!this.idsSessionEnCours.contains(idOther)) {
+					reponse = this.vue.displayJOptionAskForSession(pseudoOther);
+					System.out.println("reponse : " + reponse);
+				}else {
+					reponse = 1;
+				}
 				
 				if(reponse == 0) {
-					this.sendMessage(sockAccept, "accepted");
-					this.vue.addSession(pseudo, new VueSession(sockAccept));
-					//new TCPHandlerConnection(sockAccept).start();
 					
+					this.idsSessionEnCours.add(idOther);
+					this.sendMessage(sockAccept, "accepted");
+					
+					VueSession session = new VueSession(sockAccept, idOther, pseudoOther, this.sqlManager);
+					this.vue.addSession(pseudoOther, session);
 				}else {
 					this.sendMessage(sockAccept, "refused");
 					sockAccept.close();
@@ -254,32 +304,25 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	@Override
+	public void updateList(Object o, ArrayList<Utilisateur> userList) {
 		
 		if(o == this.commUDP) {
-			ArrayList<Utilisateur> users = (ArrayList<Utilisateur>) arg;
 			ArrayList<String> pseudos = new ArrayList<String>();
-			for (Utilisateur u : users) {
+			for (Utilisateur u : userList) {
 				pseudos.add(u.getPseudo());
 			}
 			this.vue.setActiveUsersList(pseudos);
 		}
-		
 	}
-	
-	
-	private void sendMessage(Socket sock, String message) throws IOException {
-		PrintWriter output= new PrintWriter(sock.getOutputStream(), true);
-			output.println(message);
-	}
-	
-	private String readMessage(Socket sock) throws IOException {
-		
-		BufferedReader input = new BufferedReader(new InputStreamReader( sock.getInputStream() ));
-		char buffer[] = new char[25];
-		input.read(buffer);
-		
-		String reponse = new String(buffer).split("\n")[0];
-		return reponse;
+
+	@Override
+	public void updateSocketState(Object o, Object arg) {
+		VueSession session = (VueSession) arg;
+		int index = this.vue.removeSession(session);
+		this.idsSessionEnCours.remove(index);
 	}
 
 }
