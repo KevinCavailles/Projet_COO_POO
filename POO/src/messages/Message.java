@@ -2,20 +2,50 @@ package messages;
 
 import java.io.Serializable;
 import java.lang.instrument.Instrumentation;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
 import messages.Message.TypeMessage;
 
 public abstract class Message implements Serializable {
 
-	public enum TypeMessage {JE_SUIS_CONNECTE, JE_SUIS_DECONNECTE, INFO_PSEUDO, TEXTE, IMAGE, FICHIER, MESSAGE_NUL}
+	public enum TypeMessage {JE_SUIS_CONNECTE, JE_SUIS_DECONNECTE, INFO_PSEUDO, TEXTE, IMAGE, FICHIER, MESSAGE_NUL, FICHIER_INIT, FICHIER_ANSWER}
 	protected TypeMessage type;
+	private String dateMessage;
+	private String sender;
 	private static final long serialVersionUID = 1L;
 	private static Instrumentation inst;
-
+	
+	
+	public static String getDateAndTime() {
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+		LocalDateTime now = LocalDateTime.now();
+		return dtf.format(now);
+	}
+	
+	
 	public TypeMessage getTypeMessage() {
 		return this.type;
 	}
+	
+	public void setDateMessage(String dateMessage) {
+		this.dateMessage = dateMessage;
+	}
+	
+	public String getDateMessage() {
+		return this.dateMessage;
+	}
+	
+	public String getSender() {
+		return this.sender ;
+	}
+	
+	public void setSender(String sender) {
+		this.sender = sender;
+	}
+	
+	
 
 	protected abstract String attributsToString();
 
