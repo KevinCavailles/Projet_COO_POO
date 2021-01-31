@@ -139,7 +139,7 @@ public class CommunicationUDP extends Thread {
 			users.remove(index);
 		}
 		try {
-			Message message = new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, idClient);
+			Message message = new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, pseudoClient,  idClient, port);
 			observer.update(this, message);
 		} catch (MauvaisTypeMessageException e) {
 			e.printStackTrace();
@@ -150,15 +150,6 @@ public class CommunicationUDP extends Thread {
 		int oSize = users.size();
 		for(int i=0; i<oSize;i++) {
 			users.remove(0);
-		}
-	}
-
-	
-	public void sendMessageConnecte() throws UnknownHostException, IOException {
-		for(int port : this.portOthers) {
-			try {
-				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_CONNECTE, Utilisateur.getSelf().getId()), port, InetAddress.getLocalHost());
-			} catch (MauvaisTypeMessageException e) {/*Si ça marche pas essayer là*/}
 		}
 	}
 	
@@ -198,20 +189,8 @@ public class CommunicationUDP extends Thread {
 		} catch (MauvaisTypeMessageException e) {e.printStackTrace();}
 	}
 
-
-	// Send the message "del,id,pseudo" to localhost on all the ports in
-	// "portOthers"
-	// This allows the receivers' agent (portOthers) to delete the entry
-	// corresponding to this agent
-	public void sendMessageDelete() throws UnknownHostException, IOException {
-		for(int port : this.portOthers) {
-			try {
-				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, Utilisateur.getSelf().getId()), port, InetAddress.getLocalHost());
-			} catch (MauvaisTypeMessageException e) {}
-		}
-	}
 	
-	//Broadcast a given message on the local network
+	//Broadcast a given message on the local network (here podelized by ports)
 	public void sendMessage(Message m) {
 		try {
 			for(int port : this.portOthers) {
@@ -232,22 +211,5 @@ public class CommunicationUDP extends Thread {
 			e.printStackTrace();
 		}
 	}
-
-	//Pas encore adapte message
-//	private void sendIDPseudo_broadcast(String prefixe) throws UnknownHostException, IOException {
-//		Utilisateur self = Utilisateur.getSelf();
-//		String idSelf = self.getId();
-//		String pseudoSelf = self.getPseudo();
-//
-//		String message = prefixe+","+idSelf + "," + pseudoSelf;
-//		
-//		
-//		this.client.sendMessageUDP_broadcast(message, this.portServer);
-//		
-//	}
-
-//	public synchronized void createSenderUDP(int port, Mode mode) throws SocketException {
-//		new SenderUDP(mode, port).start();
-//	}
 
 }

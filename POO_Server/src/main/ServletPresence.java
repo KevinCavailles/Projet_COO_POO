@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 import javax.servlet.ServletException;
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import communication.CommunicationUDP;
+import database.SQLiteManager;
 import messages.*;
 import messages.Message.TypeMessage;
 
@@ -28,6 +30,7 @@ public class ServletPresence extends HttpServlet implements Observer {
 	
 	private CommunicationUDP comUDP;
 	private ArrayList<Utilisateur> remoteUsers;
+	private SQLiteManager sqlManager;
  
     public ServletPresence() {
     	//A changer en passant aux IP
@@ -44,6 +47,8 @@ public class ServletPresence extends HttpServlet implements Observer {
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
+        
+        sqlManager = new SQLiteManager(0);
     }
     
     private int getIndexByID(String id) {
@@ -133,6 +138,19 @@ public class ServletPresence extends HttpServlet implements Observer {
 	    out.println( "</HTML>" );
     }
     
+    //Affiche un message d'erreur en cas de requête invalide
+    private void printErrorUnkwownUser(PrintWriter out) {
+    	out.println( "<HTML>" );
+	    out.println( "<HEAD>");
+	    out.println( "<TITLE>Erreur Utilisateur Inconnu</TITLE>" );
+	    out.println( "</HEAD>" );
+	    out.println( "<BODY>" );
+	    out.println( "<H1>Erreur : l'id que vous avez entrée n'est pas enregistrée</H1>" );
+	    out.println( "<H2>Veuillez vérifier votre syntaxe et réessayer</H2>" );
+	    out.println( "</BODY>" );
+	    out.println( "</HTML>" );
+    }
+    
     
     //Informe de la modification de la liste tous les utilisateurs internes et externes
     private void snotify(MessageSysteme message, Utilisateur user) {
@@ -164,22 +182,32 @@ public class ServletPresence extends HttpServlet implements Observer {
 		response.setContentType( "text/html" );
 		PrintWriter out = response.getWriter();
 		
-		//Si le pseudo est déjà pris : génère du html pour en informer l'utilisateur
-		if (comUDP.containsUserFromPseudo(pseudo)||remoteContainsUserFromPseudo(pseudo)) {
-			printErrorUsedPseudo(out);
-		}
-		
-		//Sinon
-		else {
-			Utilisateur user = new Utilisateur(id, pseudo, ip, port);
-	    	remoteUsers.add(user);
-	    	try {
-				snotify(new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, pseudo, id, 3334), user);
-			} catch (MauvaisTypeMessageException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		//Si l'id n'existe pas dans la BDD : génère du html pour en informer l'utilisateur
+		try {
+			if (sqlManager.getIDUser(id)==-1) {
+				printErrorUnkwownUser(out);
 			}
-	    	printActiveUsersOnly(out);
+			
+			//Si le pseudo est déjà pris : idem
+			else if (comUDP.containsUserFromPseudo(pseudo)||remoteContainsUserFromPseudo(pseudo)) {
+				printErrorUsedPseudo(out);
+			}
+			
+			//Sinon
+			else {
+				Utilisateur user = new Utilisateur(id, pseudo, ip, port);
+				remoteUsers.add(user);
+				try {
+					snotify(new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, pseudo, id, 3334), user);
+				} catch (MauvaisTypeMessageException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				printActiveUsersOnly(out);
+			}
+		} catch (UnknownHostException | SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		out.close();
 	}
@@ -190,7 +218,7 @@ public class ServletPresence extends HttpServlet implements Observer {
     	Utilisateur user = remoteUsers.get(index);
     	remoteUsers.remove(index);
     	try {
-			snotify(new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, id), user);
+			snotify(new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE,"", id, -1), user);
 		} catch (MauvaisTypeMessageException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
