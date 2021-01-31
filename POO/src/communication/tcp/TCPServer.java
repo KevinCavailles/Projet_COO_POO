@@ -10,12 +10,15 @@ import observers.ObserverInputMessage;
 
 
 public class TCPServer extends Thread {
+	
+	//****
+	public static int PORT_SERVER = 7000;
 
 	private ServerSocket sockListenTCP;
 	private ObserverInputMessage obs;
 	
 	public TCPServer(int port) throws UnknownHostException, IOException {
-		this.sockListenTCP = new ServerSocket(port, 5, InetAddress.getLocalHost());
+		this.sockListenTCP = new ServerSocket(port, 50, InetAddress.getLocalHost());
 	}
 	
 	@Override

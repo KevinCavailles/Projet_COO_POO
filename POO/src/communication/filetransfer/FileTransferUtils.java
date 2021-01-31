@@ -109,4 +109,12 @@ public class FileTransferUtils {
 		BufferedImage image = gc.createCompatibleImage(w, h);
 		return image;
 	}
+	
+	public static void createDownloads() {
+		File downloads = new File(FileTransferUtils.DOWNLOADS_RELATIVE_PATH);
+		
+		if(!downloads.exists()) {
+			downloads.mkdir();
+		}
+	}
 }

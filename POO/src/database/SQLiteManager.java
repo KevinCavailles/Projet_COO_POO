@@ -1,7 +1,6 @@
 package database;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -31,6 +30,9 @@ import messages.MessageFichier;
 public class SQLiteManager {
 
 	private static final String DATABASE_RELATIVE_PATH = "../database";
+	
+	public static String[] hardcodedNames = {"Olivia","Liam","Benjamin","Sophia","Charlotte","Noah","Elijah","Isabella",
+			"Oliver","Emma","William","Amelia","Evelyn","James","Mia","Ava","Lucas","Mason","Ethan","Harper"};
 	
 	private Connection connec;
 	private int numDatabase;
@@ -549,7 +551,7 @@ public class SQLiteManager {
 		
 		String pwdPrefix = "aze1$";
 		
-		SQLiteManager sqlManager = new SQLiteManager(0);
+		SQLiteManager sqlManager = new SQLiteManager(1);
 		
 		for(int i=0; i<hardcodedNames.length; i++) {
 			sqlManager.createNewUserEncrypt(hardcodedNames[i]+i, pwdPrefix+hardcodedNames[i].charAt(0)+i);

@@ -8,7 +8,7 @@ public class MessageSysteme extends Message {
 	private int port;
 
 	public MessageSysteme(TypeMessage type) throws MauvaisTypeMessageException{
-		if ((type==TypeMessage.JE_SUIS_CONNECTE)||(type==TypeMessage.JE_SUIS_DECONNECTE)||(type==TypeMessage.MESSAGE_NUL)) {
+		if ((type==TypeMessage.JE_SUIS_CONNECTE)||(type==TypeMessage.MESSAGE_NUL)) {
 			this.type=type;
 			this.pseudo="";
 			this.id="";
@@ -18,7 +18,7 @@ public class MessageSysteme extends Message {
 	}
 	
 	public MessageSysteme(TypeMessage type, String pseudo, String id, int port) throws MauvaisTypeMessageException {
-		if (type==TypeMessage.INFO_PSEUDO) {
+		if (type==TypeMessage.INFO_PSEUDO ||(type==TypeMessage.JE_SUIS_DECONNECTE)) {
 			this.type=type;
 			this.pseudo=pseudo;
 			this.id=id;
@@ -26,6 +26,7 @@ public class MessageSysteme extends Message {
 		}
 		else throw new MauvaisTypeMessageException();
 	}
+	
 	
 	public String getPseudo() {
 		return this.pseudo;

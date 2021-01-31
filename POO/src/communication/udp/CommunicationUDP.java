@@ -2,6 +2,7 @@ package communication.udp;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
@@ -11,6 +12,11 @@ import messages.*;
 import observers.ObserverUserList;
 
 public class CommunicationUDP extends Thread {
+
+	// ****
+	protected static int PORT_SERVEUR = 3000;
+	// ****
+	protected static int PORT_CLIENT = 2000;
 
 	private UDPClient client;
 	private UDPServer server;
@@ -27,6 +33,14 @@ public class CommunicationUDP extends Thread {
 		this.client = new UDPClient(portClient);
 	}
 
+	// ****
+	public CommunicationUDP() throws SocketException, UnknownHostException {
+		this.portServer = PORT_SERVEUR;
+		this.server = new UDPServer(portServer, this);
+		this.server.start();
+		this.client = new UDPClient(PORT_CLIENT);
+	}
+
 	private ArrayList<Integer> getArrayListFromArray(int ports[]) {
 		ArrayList<Integer> tmp = new ArrayList<Integer>();
 		for (int port : ports) {
@@ -41,27 +55,27 @@ public class CommunicationUDP extends Thread {
 		this.observer = obs;
 	}
 
-	//-------------- USER LIST UPDATE FUNCTION --------------//
+	// -------------- USER LIST UPDATE FUNCTION --------------//
 
 	protected synchronized void addUser(String idClient, String pseudoClient, InetAddress ipClient, int port)
 			throws IOException {
 		users.add(new Utilisateur(idClient, pseudoClient, ipClient, port));
-		observer.updateList(this, users);
+		this.sendUpdate();
 
 	}
 
 	protected synchronized void changePseudoUser(String idClient, String pseudoClient, InetAddress ipClient, int port) {
 		int index = getIndexFromID(idClient);
 		users.get(index).setPseudo(pseudoClient);
-		observer.updateList(this, users);
+		this.sendUpdate();
 	}
 
 	protected synchronized void removeUser(String idClient, String pseudoClient, InetAddress ipClient, int port) {
-		int index = getIndexFromIP(ipClient);
+		int index = getIndexFromID(idClient);
 		if (index != -1) {
 			users.remove(index);
 		}
-		observer.updateList(this, users);
+		this.sendUpdate();
 	}
 
 	public void removeAll() {
@@ -71,7 +85,7 @@ public class CommunicationUDP extends Thread {
 		}
 	}
 
-	//-------------- CHECKERS --------------//
+	// -------------- CHECKERS --------------//
 
 	protected boolean containsUserFromID(String id) {
 		for (Utilisateur u : users) {
@@ -92,7 +106,7 @@ public class CommunicationUDP extends Thread {
 		return false;
 	}
 
-	//-------------- GETTERS --------------//
+	// -------------- GETTERS --------------//
 
 	public Utilisateur getUserFromPseudo(String pseudo) {
 		for (int i = 0; i < users.size(); i++) {
@@ -112,19 +126,8 @@ public class CommunicationUDP extends Thread {
 		return -1;
 	}
 
-	private int getIndexFromIP(InetAddress ip) {
-		for (int i = 0; i < users.size(); i++) {
-			if (users.get(i).getIp().equals(ip)) {
-				return i;
-			}
-		}
-		return -1;
-	}
-	
-	
-	
-	//-------------- SEND MESSAGES --------------//
-	
+	// -------------- SEND MESSAGES --------------//
+
 	public void sendMessageConnecte() throws UnknownHostException, IOException {
 		for (int port : this.portOthers) {
 			try {
@@ -145,15 +148,10 @@ public class CommunicationUDP extends Thread {
 
 		Utilisateur self = Utilisateur.getSelf();
 
-		String pseudoSelf = self.getPseudo();
-		String idSelf = self.getId();
-		int portSelf = self.getPort();
-
-		Message msout = null;
 		try {
-			msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, pseudoSelf, idSelf, portSelf);
+			Message msgOut = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, self.getPseudo(), self.getId(), self.getPort());
 			for (int port : this.portOthers) {
-				this.client.sendMessageUDP_local(msout, port, InetAddress.getLocalHost());
+				this.client.sendMessageUDP_local(msgOut, port, InetAddress.getLocalHost());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -167,9 +165,9 @@ public class CommunicationUDP extends Thread {
 
 		Utilisateur self = Utilisateur.getSelf();
 		try {
-			Message msout = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, self.getPseudo(), self.getId(),
+			Message msgOut = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, self.getPseudo(), self.getId(),
 					self.getPort());
-			this.client.sendMessageUDP_local(msout, portOther, InetAddress.getLocalHost());
+			this.client.sendMessageUDP_local(msgOut, portOther, InetAddress.getLocalHost());
 		} catch (MauvaisTypeMessageException e) {
 			e.printStackTrace();
 		}
@@ -180,32 +178,26 @@ public class CommunicationUDP extends Thread {
 	// This allows the receivers' agent (portOthers) to delete the entry
 	// corresponding to this agent
 	public void sendMessageDelete() throws UnknownHostException, IOException {
-		for (int port : this.portOthers) {
-			try {
-				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE), port,
-						InetAddress.getLocalHost());
-			} catch (MauvaisTypeMessageException e) {
+		Utilisateur self = Utilisateur.getSelf();
+		try {
+			
+			Message msgOut = new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, self.getPseudo(), self.getId(), self.getPort());
+			for (int port : this.portOthers) {
+				this.client.sendMessageUDP_local(msgOut, port, InetAddress.getLocalHost());
 			}
+			
+		} catch (MauvaisTypeMessageException e) {
+
+		}
+	}
+	
+	
+	private void sendUpdate() {
+		if(this.observer != null) {
+			this.observer.updateList(this, users);
 		}
 	}
 
-	// Pas encore adapte message
-//	private void sendIDPseudo_broadcast(String prefixe) throws UnknownHostException, IOException {
-//		Utilisateur self = Utilisateur.getSelf();
-//		String idSelf = self.getId();
-//		String pseudoSelf = self.getPseudo();
-//
-//		String message = prefixe+","+idSelf + "," + pseudoSelf;
-//		
-//		
-//		this.client.sendMessageUDP_broadcast(message, this.portServer);
-//		
-//	}
-
-//	public synchronized void createSenderUDP(int port, Mode mode) throws SocketException {
-//		new SenderUDP(mode, port).start();
-//	}
-	
 	public void destroyAll() {
 		this.client.destroyAll();
 		this.server.interrupt();

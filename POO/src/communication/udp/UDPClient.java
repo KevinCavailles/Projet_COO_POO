@@ -21,6 +21,8 @@ public class UDPClient {
 		InetAddress localHost = InetAddress.getLocalHost();
 		NetworkInterface networkInterface = NetworkInterface.getByInetAddress(localHost);
 		this.broadcast = networkInterface.getInterfaceAddresses().get(0).getBroadcast();
+		System.out.println(this.broadcast);
+		System.out.println(InetAddress.getLocalHost());
 	}
 	
 	
@@ -31,12 +33,6 @@ public class UDPClient {
 		this.sockUDP.send(outpacket);
 		
 	}
-	
-//	protected void sendMessageUDP_broadcast(String message, int port) throws IOException{
-//		String messageString=message.toString();
-//		DatagramPacket outpacket = new DatagramPacket(messageString.getBytes(), messageString.length(), this.broadcast, port);
-//		this.sockUDP.send(outpacket);
-//	}
 	
 	protected void destroyAll() {
 		this.sockUDP.close();

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+
 import main.Utilisateur;
 import messages.*;
 
@@ -36,26 +37,23 @@ public class UDPServer extends Thread {
 				case JE_SUIS_CONNECTE:
 
 					if (Utilisateur.getSelf() != null) {
-						// System.out.println("first co");
+						
 						int portClient = inPacket.getPort();
-						int portServer = portClient + 1;
-
+						int portServer = portClient+1;
 						this.commUDP.sendMessageInfoPseudo(portServer);
 					}
 
 					break;
 
 				case INFO_PSEUDO:
+					MessageSysteme m = (MessageSysteme) msg;
 
-					if (this.commUDP.containsUserFromID(((MessageSysteme) msg).getId())) {
-						this.commUDP.changePseudoUser(((MessageSysteme) msg).getId(),
-								((MessageSysteme) msg).getPseudo(), inPacket.getAddress(),
-								((MessageSysteme) msg).getPort());
+					if (this.commUDP.containsUserFromID(m.getId())) {
+						this.commUDP.changePseudoUser(m.getId(), m.getPseudo(), inPacket.getAddress(), m.getPort());
 					} else {
 
-						this.commUDP.addUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(),
-								inPacket.getAddress(), ((MessageSysteme) msg).getPort());
-						System.out.println(((MessageSysteme) msg).getId() + ", " + ((MessageSysteme) msg).getPseudo());
+						this.commUDP.addUser(m.getId(), m.getPseudo(), inPacket.getAddress(), m.getPort());
+						System.out.println(m.getId() + ", " + m.getPseudo());
 					}
 					break;
 

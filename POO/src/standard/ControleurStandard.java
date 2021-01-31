@@ -10,10 +10,12 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JList;
+import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -34,7 +36,6 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		TERMINE, EN_COURS
 	}
 
-	private int num;
 	private ModifPseudo modifPseudo;
 	private VueStandard vue;
 	private CommunicationUDP commUDP;
@@ -42,26 +43,25 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 	private TCPServer tcpServ;
 	private ArrayList<String> idsSessionEnCours;
 	private SQLiteManager sqlManager;
+	private VueConnexion vueConnexion;
 
-	public ControleurStandard(VueStandard vue, CommunicationUDP commUDP, int portServerTCP, SQLiteManager sqlManager, int num)
-			throws IOException {
+	public ControleurStandard(VueStandard vue, CommunicationUDP commUDP, int portServerTCP, SQLiteManager sqlManager,
+			VueConnexion vueConnexion) throws IOException {
 		this.vue = vue;
+		this.vue.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
-		this.num = num;
+		this.vueConnexion = vueConnexion;
+		
 		this.tcpServ = new TCPServer(portServerTCP);
+	
 		this.tcpServ.addObserver(this);
 		this.tcpServ.start();
 
 		this.commUDP = commUDP;
-		this.commUDP.setObserver(this);
-		this.commUDP.sendMessageConnecte();
-		this.commUDP.sendMessageInfoPseudo();
-
+		
 		this.idsSessionEnCours = new ArrayList<String>();
 
 		this.sqlManager = sqlManager;
-
-		this.modifPseudo = ModifPseudo.TERMINE;
 	}
 
 	// ---------- LISTSELECTION LISTENER OPERATIONS ----------//
@@ -86,11 +86,16 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				System.out.println("choix : " + choix);
 
 				if (choix == 0) {
+					
+					
 					int port = other.getPort();
+					
+					
 					System.out.println("port = " + port);
 					try {
 
 						Socket socketComm = new Socket(InetAddress.getLocalHost(), port);
+						
 						this.sendMessage(socketComm, Utilisateur.getSelf().getPseudo());
 						String reponse = this.readMessage(socketComm);
 
@@ -145,7 +150,6 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 					try {
 						this.commUDP.sendMessageInfoPseudo();
 					} catch (IOException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 
@@ -163,15 +167,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		// Cas deconnexion
 		else if ((JButton) e.getSource() == this.vue.getButtonDeconnexion()) {
 			try {
-				this.commUDP.sendMessageDelete();
-				this.commUDP.removeAll();
-				this.commUDP.destroyAll();
-				this.vue.removeAllUsers();
-				Utilisateur.resetSelf();
-				
-				vue.dispose();
-				
-				new VueConnexion(this.num);
+				this.setVueConnexion();
 			} catch (IOException e1) {
 
 				e1.printStackTrace();
@@ -191,9 +187,8 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 	public void windowClosing(WindowEvent e) {
 
 		try {
-			this.commUDP.sendMessageDelete();
+			this.setVueConnexion();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
@@ -207,7 +202,6 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 
 	@Override
 	public void windowClosed(WindowEvent e) {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -306,6 +300,25 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		VueSession session = (VueSession) arg;
 		int index = this.vue.removeSession(session);
 		this.idsSessionEnCours.remove(index);
+	}
+
+	private void setVueConnexion() throws UnknownHostException, IOException {
+		this.commUDP.sendMessageDelete();
+		this.vue.removeAllUsers();
+		this.vue.closeAllSession();
+		this.idsSessionEnCours.clear();
+		Utilisateur.resetSelf();
+		this.commUDP.setObserver(null);
+
+		this.vue.setVisible(false);
+		this.vueConnexion.setVisible(true);
+	}
+	
+	protected void init() throws UnknownHostException, IOException {
+		this.commUDP.setObserver(this);
+		this.commUDP.sendMessageConnecte();
+		this.commUDP.sendMessageInfoPseudo();
+		this.modifPseudo = ModifPseudo.TERMINE;
 	}
 	
 

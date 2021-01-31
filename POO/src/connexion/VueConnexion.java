@@ -4,6 +4,7 @@ package connexion;
 import java.awt.*;
 import javax.swing.*;
 
+import database.SQLiteManager;
 import main.Vue;
 
 public class VueConnexion extends Vue {
@@ -16,6 +17,8 @@ public class VueConnexion extends Vue {
 	private JLabel labelUsername;
 	private JLabel labelPassword;
 	private JLabel connexionInfo;
+	private JPanel main;
+	private JPanel panelPassword;
 
 	//Controleur
 	private ControleurConnexion controle;
@@ -36,6 +39,9 @@ public class VueConnexion extends Vue {
 		//Regle le bouton par défaut
 		this.getRootPane().setDefaultButton(boutonValider);
 		
+		this.inputUsername.setText(SQLiteManager.hardcodedNames[numtest]+numtest);
+		this.inputPassword.setText("aze1$"+SQLiteManager.hardcodedNames[numtest].charAt(0)+numtest);
+		
 		//Affiche la fenetre
 		this.setVisible(true);
 	}
@@ -43,9 +49,9 @@ public class VueConnexion extends Vue {
 	private void ajouterElements() {
 		
 		//Creation panel
-		JPanel main = new JPanel(new GridLayout(4,1));		
+		main = new JPanel(new GridLayout(4,1));		
 		JPanel panelUsername = new JPanel(new GridLayout(1, 2));
-		JPanel panelPassword = new JPanel(new GridLayout(1, 2));
+		this.panelPassword = new JPanel(new GridLayout(1, 2));
 		
 		//Cree les elements
 		this.connexionInfo = new JLabel("");
@@ -68,15 +74,18 @@ public class VueConnexion extends Vue {
 		boutonValider.addActionListener(controle);
 		
 		//Ajoute les elements
-		panelUsername.add(this.inputUsername);
 		panelUsername.add(this.labelUsername);
+		panelUsername.add(this.inputUsername);
 		
-		panelPassword.add(this.inputPassword);
-		panelPassword.add(this.labelPassword);
+		
+		this.panelPassword.add(this.labelPassword);
+		this.panelPassword.add(this.inputPassword);
+		
+		
 		
 		main.add(connexionInfo);
 		main.add(panelUsername);
-		main.add(panelPassword);
+		main.add(this.panelPassword);
 		main.add(boutonValider);
 		
 		this.add(main);
@@ -103,6 +112,14 @@ public class VueConnexion extends Vue {
 	
 	protected void resetUsernameField() {
 		this.inputUsername.setText("");
+	}
+	
+	protected void removePasswordPanel() {
+		this.main.remove(2);
+	}
+	
+	protected void addPasswordPanel() {
+		this.main.add(this.panelPassword, 2);
 	}
 
 	protected void resetPasswordField() {

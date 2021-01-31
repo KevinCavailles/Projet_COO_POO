@@ -5,16 +5,13 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
-import communication.*;
 import communication.udp.CommunicationUDP;
 import database.SQLiteManager;
 import main.Utilisateur;
-import observers.ObserverUserList;
 import standard.VueStandard;
 
-public class ControleurConnexion implements ActionListener, ObserverUserList{
+public class ControleurConnexion implements ActionListener{
 
 	private enum Etat {DEBUT, ID_OK};
 	
@@ -22,37 +19,43 @@ public class ControleurConnexion implements ActionListener, ObserverUserList{
 	private Etat etat;
 	private CommunicationUDP comUDP;
 	private int portTCP;
-	private int num;
 	private String username;
 	private SQLiteManager sqlManager;
+	private VueStandard vueStd;
 	
 	public ControleurConnexion(VueConnexion vue, int numtest) {
 		this.vue = vue;
 		this.etat = Etat.DEBUT;
-		this.num = numtest;
 		this.username = "";
 		this.sqlManager = new SQLiteManager(0);
+		this.vueStd = null;
 		//Pour les tests, changer pour un truc plus général quand on change CommunicationUDP
+		
+		int[] portServer = {2209, 2309, 2409, 2509};
 		try {
 			switch(numtest) {
 			case 0 : 
-				this.comUDP = new CommunicationUDP(2208, 2209, new int[] {2309, 2409});
+				this.comUDP = new CommunicationUDP(2208, 2209, portServer);
 				this.portTCP = 7010;
 				break;
 			case 1 :
-				this.comUDP = new CommunicationUDP(2308, 2309, new int[] {2209, 2409});
+				this.comUDP = new CommunicationUDP(2308, 2309, portServer);
 				this.portTCP = 7020;
 				break;
 			case 2 :
-				this.comUDP = new CommunicationUDP(2408, 2409, new int[] {2209, 2309});
+				this.comUDP = new CommunicationUDP(2408, 2409, portServer);
 				this.portTCP = 7030;
 				break;
+			case 3 :
+				this.comUDP = new CommunicationUDP(2508, 2509, portServer);
+				this.portTCP = 7040;
+				break;
 			default :
-				this.comUDP = new CommunicationUDP(2408, 2409, new int[] {2209, 2309});
+				this.comUDP = new CommunicationUDP(2408, 2409, portServer);
 				this.portTCP = 7040;
 			}
+//			
 			
-			this.comUDP.setObserver(this);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -99,11 +102,17 @@ public class ControleurConnexion implements ActionListener, ObserverUserList{
 				
 				//Mise en place de la demande du pseudo
 				this.vue.setConnexionInfo("");
+				this.vue.removePasswordPanel();
+				
 				this.vue.setTextUsernameField("Veuillez entrer votre pseudonyme");
 				this.vue.resetUsernameField();
 				inputOK=false;
 			}
-			else this.vue.setConnexionInfo("Identifiant ou mot de passe invalide, veuillez réessayer");
+			else {
+				this.vue.setConnexionInfo("Identifiant ou mot de passe invalide, veuillez réessayer");
+				this.vue.resetPasswordField();
+			}
+			
 		}
 		else {
 			pseudo = vue.getUsernameValue();
@@ -125,17 +134,16 @@ public class ControleurConnexion implements ActionListener, ObserverUserList{
 				try {
 					this.comUDP.sendMessageInfoPseudo();
 				} catch (UnknownHostException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+					
 				try {
-					this.vue.close();
-					new VueStandard("Standard", this.comUDP, this.portTCP, this.sqlManager, this.num);
+					this.resetView();
+					this.vue.setVisible(false);
+					this.setVueStandard();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
@@ -143,10 +151,25 @@ public class ControleurConnexion implements ActionListener, ObserverUserList{
 		}
 	}
 
-	@Override
-	public void updateList(Object o, ArrayList<Utilisateur> userList) {
-		// TODO Auto-generated method stub
+	
+	private void setVueStandard() throws IOException {
+		if(this.vueStd == null) {
+			this.vueStd = new VueStandard("Standard", this.comUDP, this.portTCP, this.sqlManager, this.vue);
+			
+		}else {
+			this.vueStd.initControleur();
+			this.vueStd.setPseudoSelf();
+			this.vueStd.setVisible(true);
+		}
+	}
+	
+	private void resetView() {
+		this.etat = Etat.DEBUT;
+		this.vue.addPasswordPanel();
+		this.vue.resetPasswordField();
+		this.vue.resetUsernameField();
+		this.vue.setTextUsernameField("Nom d'utilisateur");
+		this.vue.setConnexionInfo("");
 		
 	}
-
 }

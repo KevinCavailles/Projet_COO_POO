@@ -7,7 +7,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -25,6 +27,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.plaf.basic.BasicButtonUI;
 
 import communication.udp.CommunicationUDP;
+import connexion.VueConnexion;
 import database.SQLiteManager;
 import main.Utilisateur;
 import main.Vue;
@@ -48,12 +51,13 @@ public class VueStandard extends Vue {
 	private ArrayList<VueSession> sessions;
 	private DefaultListModel<String> userList = new DefaultListModel<String>();
 
-	public VueStandard(String title, CommunicationUDP commUDP, int portServerTCP, SQLiteManager sqlManager, int num) throws IOException {
+	public VueStandard(String title, CommunicationUDP commUDP, int portServerTCP, SQLiteManager sqlManager, VueConnexion vueConnexion) throws IOException {
 		super(title);
 
 		this.tabButtons = new ArrayList<JButton>();
 		this.sessions = new ArrayList<VueSession>();
-		this.c = new ControleurStandard(this, commUDP, portServerTCP, sqlManager, num);
+		this.c = new ControleurStandard(this, commUDP, portServerTCP, sqlManager, vueConnexion);
+		this.c.init();
 
 		getContentPane().setLayout(new GridBagLayout());
 
@@ -118,6 +122,11 @@ public class VueStandard extends Vue {
 		this.seDeconnecter = new JButton("Se Déconnecter");
 		this.seDeconnecter.addActionListener(this.c);
 		deconnexion.add(this.seDeconnecter);
+		
+		if(Utilisateur.getSelf().getId() == "admin") {
+			JButton addNewUser = new JButton("Ajouter un nouvel utilisateur");
+			deconnexion.add(addNewUser);
+		}
 
 		// --------Ajout à la vue--------//
 		left.add(self, BorderLayout.PAGE_START);
@@ -185,6 +194,10 @@ public class VueStandard extends Vue {
 	protected void setDisplayedPseudo(String pseudo) {
 		this.pseudoSelf.setText(pseudo);
 	}
+	
+	public void setPseudoSelf() {
+		this.setDisplayedPseudo(Utilisateur.getSelf().getPseudo());
+	}
 
 	// ------------ JOPTIONS -------------//
 
@@ -237,18 +250,6 @@ public class VueStandard extends Vue {
 		return index;
 	}
 
-	protected int removeSession(VueSession vue) {
-		int index = this.sessions.indexOf(vue);
-
-		vue.destroyAll();
-
-		this.zoneSessions.remove(vue);
-		this.sessions.remove(index);
-		this.tabButtons.remove(index);
-
-		return index;
-	}
-
 	protected void addSession(String pseudo, VueSession session) {
 		JPanel tabTitle = new JPanel();
 
@@ -266,11 +267,40 @@ public class VueStandard extends Vue {
 		session.requestFocus();
 
 	}
+	
+	protected synchronized int removeSession(VueSession vue) {
+		int index = this.sessions.indexOf(vue);
+
+		vue.destroyAll();
+
+		this.zoneSessions.remove(vue);
+		this.sessions.remove(index);
+		this.tabButtons.remove(index);
+
+		return index;
+	}
+	
+	protected void closeAllSession() {
+		Iterator<VueSession> it = this.sessions.iterator();
+		while(it.hasNext()) {
+			VueSession session = it.next();
+			this.zoneSessions.remove(session);
+			session.destroyAll();
+			it.remove();
+		}
+		
+		this.tabButtons.clear();
+	}
+
 
 	// ------------ OTHERS -------------//
 
 	protected void removeAllUsers() {
 		this.userList.removeAllElements();
+	}
+	
+	public void initControleur() throws UnknownHostException, IOException {
+		this.c.init();
 	}
 
 	// ------------- PRIVATE CLASSES FOR THE TABS BUTTON -------------//
