@@ -22,8 +22,7 @@ import messages.Message.TypeMessage;
 @WebServlet("/ServletPresence")
 
 //Faire un publish (get) séparé en utilisant les cookies pour stocker les modifications : pose problème au niveau de la synchro des pseudos (à dire rapport)
-// BUG 1 : problème des conflits de pseudo
-//Transmission de la liste des locaux direct du serveur aux externes ? à voir (direct dans le doPost du coup)
+
 public class ServletPresence extends HttpServlet implements Observer {
 	private static final long serialVersionUID = 1L;
 	
@@ -65,6 +64,75 @@ public class ServletPresence extends HttpServlet implements Observer {
     	return false;
     }
     
+    //Fonctions d'affichage
+    
+  //Affiche la liste des utilisateurs actifs
+    private void printActiveUsers(PrintWriter out) {
+	    out.println( "<TABLE>" );
+	    out.println("<TH>Utilisateurs connectés : </TH>");
+	    for (Utilisateur uExt : remoteUsers) {
+	    	out.println("<TH> " + uExt.getPseudo() + ",</TH>");
+	    }
+	    comUDP.printActiveUsersUDP(out);
+	    out.println( "</TABLE>" );
+    }
+    
+    //Affiche la liste des utilisateurs actifs, seule sur la page
+    private void printActiveUsersOnly(PrintWriter out) {
+    	out.println( "<HTML>" );
+	    out.println( "<HEAD>");
+	    out.println( "<TITLE>Serveur de présence</TITLE>" );
+	    out.println( "</HEAD>" );
+	    out.println( "<BODY>" );
+	    printActiveUsers(out);
+	    out.println( "</BODY>" );
+	    out.println( "</HTML>" );
+    }
+    
+    //Affiche la page d'accueil
+    private void printHomePage(PrintWriter out) {
+    	out.println( "<HTML>" );
+	    out.println( "<HEAD>");
+	    out.println( "<TITLE>Serveur de présence - Accueil</TITLE>" );
+	    out.println( "</HEAD>" );
+	    out.println( "<BODY>" );
+	    out.println( "<H1>Bienvenue sur le service de connexion à distance</H1>" );
+	    out.println( "<H2>Vous pouvez taper votre requête dans la barre de navigation</H2>" );
+	    out.println( "<H2>Requêtes (à ajouter derrière l'URL) : </H2>" );
+	    out.println( "<H3>Se connecter : ?type=POST&id=[votre id]&pseudo=[pseudo voulu]&port=[port utilisé] </H3>" );
+	    out.println( "<H3>Se déconnecter : ?type=DELETE&id=[votre id] </H3>" );
+	    out.println( "<H3>Changer de pseudo : ?type=PUT&id=[votre id]&pseudo=[pseudo voulu] </H3>" );
+	    out.println( "</BODY>" );
+	    out.println( "</HTML>" );
+    }
+    
+    //Affiche un message d'erreur en cas de pseudo déjà utilisé
+    private void printErrorUsedPseudo(PrintWriter out){
+    	out.println( "<HTML>" );
+		out.println( "<HEAD>");
+		out.println( "<TITLE>Erreur pseudo déjà utilisé</TITLE>" );
+		out.println( "</HEAD>" );
+		out.println( "<BODY>" );
+		out.println( "<H1>Erreur : Ce pseudo est déjà utilisé</H1>" );
+		out.println( "<H2>Veuillez choisir un autre pseudo</H2>" );
+		out.println( "</BODY>" );
+		printActiveUsers(out);
+		out.println( "</HTML>" );
+    }
+    
+    //Affiche un message d'erreur en cas de requête invalide
+    private void printErrorInvalidRequest(PrintWriter out) {
+    	out.println( "<HTML>" );
+	    out.println( "<HEAD>");
+	    out.println( "<TITLE>Erreur requête invalide</TITLE>" );
+	    out.println( "</HEAD>" );
+	    out.println( "<BODY>" );
+	    out.println( "<H1>Erreur : nous n'avons pas compris votre requête</H1>" );
+	    out.println( "<H2>Veuillez vérifier votre syntaxe et réessayer</H2>" );
+	    out.println( "</BODY>" );
+	    out.println( "</HTML>" );
+    }
+    
     
     //Informe de la modification de la liste tous les utilisateurs internes et externes
     private void snotify(MessageSysteme message, Utilisateur user) {
@@ -93,20 +161,12 @@ public class ServletPresence extends HttpServlet implements Observer {
 		int port = Integer.parseInt(request.getParameter("port"));
 		InetAddress ip = InetAddress.getByName(request.getRemoteAddr());
 		
+		response.setContentType( "text/html" );
+		PrintWriter out = response.getWriter();
+		
 		//Si le pseudo est déjà pris : génère du html pour en informer l'utilisateur
 		if (comUDP.containsUserFromPseudo(pseudo)||remoteContainsUserFromPseudo(pseudo)) {
-			response.setContentType( "text/html" );
-		    PrintWriter out = response.getWriter();
-		    out.println( "<HTML>" );
-		    out.println( "<HEAD>");
-		    out.println( "<TITLE>Erreur pseudo déjà utilisé</TITLE>" );
-		    out.println( "</HEAD>" );
-		    out.println( "<BODY>" );
-		    out.println( "<H1>Erreur : Ce pseudo est déjà utilisé</H1>" );
-		    out.println( "<H2>Veuillez choisir un autre pseudo</H2>" );
-		    out.println( "</BODY>" );
-		    out.println( "</HTML>" );
-		    out.close();
+			printErrorUsedPseudo(out);
 		}
 		
 		//Sinon
@@ -119,7 +179,9 @@ public class ServletPresence extends HttpServlet implements Observer {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+	    	printActiveUsersOnly(out);
 		}
+		out.close();
 	}
 	
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
@@ -133,6 +195,10 @@ public class ServletPresence extends HttpServlet implements Observer {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+    	response.setContentType( "text/html" );
+	    PrintWriter out = response.getWriter();
+	    printHomePage(out);
+	    out.close();
 	}
 
     //Permet de dire si on a changé de pseudo (pour les utilisateurs externes)
@@ -141,20 +207,12 @@ public class ServletPresence extends HttpServlet implements Observer {
 		String pseudo = request.getParameter("pseudo");
 		int index = getIndexByID(id);
 		
+		response.setContentType( "text/html" );
+		PrintWriter out = response.getWriter();
+		
 		//Si le pseudo est déjà pris : génère du html pour en informer l'utilisateur
 		if (comUDP.containsUserFromPseudo(pseudo)||remoteContainsUserFromPseudo(pseudo)) {
-			response.setContentType( "text/html" );
-			PrintWriter out = response.getWriter();
-			out.println( "<HTML>" );
-			out.println( "<HEAD>");
-			out.println( "<TITLE>Erreur pseudo déjà utilisé</TITLE>" );
-			out.println( "</HEAD>" );
-			out.println( "<BODY>" );
-			out.println( "<H1>Erreur : Ce pseudo est déjà utilisé</H1>" );
-			out.println( "<H2>Veuillez choisir un autre pseudo</H2>" );
-			out.println( "</BODY>" );
-			out.println( "</HTML>" );
-			out.close();
+			printErrorUsedPseudo(out);
 		}
 		
 		else {
@@ -166,7 +224,9 @@ public class ServletPresence extends HttpServlet implements Observer {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			printActiveUsersOnly(out);
 		}
+		out.close();
 	}
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
@@ -191,15 +251,7 @@ public class ServletPresence extends HttpServlet implements Observer {
 				default :
 					response.setContentType( "text/html" );
 				    PrintWriter out = response.getWriter();
-				    out.println( "<HTML>" );
-				    out.println( "<HEAD>");
-				    out.println( "<TITLE>Erreur requête invalide</TITLE>" );
-				    out.println( "</HEAD>" );
-				    out.println( "<BODY>" );
-				    out.println( "<H1>Erreur : nous n'avons pas compris votre requête</H1>" );
-				    out.println( "<H2>Veuillez vérifier votre syntaxe et réessayer</H2>" );
-				    out.println( "</BODY>" );
-				    out.println( "</HTML>" );
+				    printErrorInvalidRequest(out);
 				    out.close();
 			}
 		} 
@@ -207,19 +259,7 @@ public class ServletPresence extends HttpServlet implements Observer {
 		catch (java.lang.NullPointerException e) {
 			response.setContentType( "text/html" );
 		    PrintWriter out = response.getWriter();
-		    out.println( "<HTML>" );
-		    out.println( "<HEAD>");
-		    out.println( "<TITLE>Serveur de présence - Accueil</TITLE>" );
-		    out.println( "</HEAD>" );
-		    out.println( "<BODY>" );
-		    out.println( "<H1>Bienvenue sur le service de connexion à distance</H1>" );
-		    out.println( "<H2>Vous pouvez taper votre requête dans la barre de navigation</H2>" );
-		    out.println( "<H2>Requêtes (à ajouter derrière l'URL) : </H2>" );
-		    out.println( "<H3>Se connecter : ?type=POST&id=[votre id]&pseudo=[pseudo voulu]&port=[port utilisé] </H3>" );
-		    out.println( "<H3>Se déconnecter : ?type=DELETE&id=[votre id] </H3>" );
-		    out.println( "<H3>Changer de pseudo : ?type=PUT&id=[votre id]&pseudo=[pseudo voulu] </H3>" );
-		    out.println( "</BODY>" );
-		    out.println( "</HTML>" );
+		    printHomePage(out);
 		    out.close();
 			
 		}

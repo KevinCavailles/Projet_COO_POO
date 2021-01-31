@@ -1,6 +1,7 @@
 package communication;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -102,6 +103,12 @@ public class CommunicationUDP extends Thread {
 		}
 		return -1;
 	}
+	
+	 public void printActiveUsersUDP(PrintWriter out) {
+		    for (Utilisateur uIn : users) {
+		    	out.println("<TH> " + uIn.getPseudo() + ",</TH>");
+		    }
+	    }
 	
 	
 	protected synchronized void addUser(String idClient, String pseudoClient, InetAddress ipClient, int port) throws IOException {
