@@ -8,36 +8,45 @@ import java.net.UnknownHostException;
 
 import observers.ObserverInputMessage;
 
-
 public class TCPServer extends Thread {
-	
-	//****
-	public static int PORT_SERVER = 7000;
 
 	private ServerSocket sockListenTCP;
-	private ObserverInputMessage obs;
-	
+	private ObserverInputMessage obsInput;
+
+	/**
+	 * Create a TCP Server on the specified port. It will listen continuously for
+	 * connections in order to create new sessions between users.
+	 * 
+	 * @param port 		The port on which the server will listen
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 */
 	public TCPServer(int port) throws UnknownHostException, IOException {
 		this.sockListenTCP = new ServerSocket(port, 50, InetAddress.getLocalHost());
 	}
-	
+
 	@Override
 	public void run() {
-		System.out.println("TCP running");
 		Socket sockAccept;
-		while(true) {
+		while (true) {
 			try {
 				sockAccept = this.sockListenTCP.accept();
-				this.obs.update(this, sockAccept);
+
+				// Notify the observer of the new connexion
+				this.obsInput.updateInput(this, sockAccept);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 		}
 	}
-	
-	public void addObserver(ObserverInputMessage obs) {
-		this.obs = obs;
+
+	/**
+	 * Set the observer to notify when a new connection is made.
+	 * 
+	 * @param o 	The observer
+	 */
+	public void addObserver(ObserverInputMessage o) {
+		this.obsInput = o;
 	}
 }

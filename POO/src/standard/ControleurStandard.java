@@ -245,7 +245,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 	// ------------OBSERVERS-------------//
 
 	@Override
-	public void update(Object o, Object arg) {
+	public void updateInput(Object o, Object arg) {
 
 		if (o == this.tcpServ) {
 
@@ -304,6 +304,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 
 	private void setVueConnexion() throws UnknownHostException, IOException {
 		this.commUDP.sendMessageDelete();
+		this.commUDP.removeAllUsers();
 		this.vue.removeAllUsers();
 		this.vue.closeAllSession();
 		this.idsSessionEnCours.clear();

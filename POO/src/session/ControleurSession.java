@@ -39,6 +39,16 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 	private SQLiteManager sqlManager;
 	private ArrayList<File> files;
 	
+	
+	/**
+	 * 
+	 * @param vue
+	 * @param socketComm
+	 * @param idOther
+	 * @param pseudoOther
+	 * @param sqlManager
+	 * @throws IOException
+	 */
 	protected ControleurSession(VueSession vue, Socket socketComm, String idOther, String pseudoOther, SQLiteManager sqlManager) throws IOException {
 		this.vue = vue;
 		this.tcpClient = new TCPClient(socketComm);
@@ -60,7 +70,7 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
-		//Quand le bouton envoyer est presse
+		//If the button "Envoyer" is pressed
 		if ((JButton) e.getSource() == this.vue.getButtonEnvoyer()) {
 			String messageContent = this.vue.getInputedText();
 			System.out.println(messageContent);
@@ -92,8 +102,7 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 				
 				try {
 					this.tcpClient.sendMessage(messageOut);	
-				} catch (MauvaisTypeMessageException | IOException e1) {
-					// TODO Auto-generated catch block
+				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
 				
@@ -105,7 +114,9 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 			}
 		}
 		
+		//If the button "Importer" is pressed
 		if((JButton) e.getSource() == this.vue.getButtonImportFile()) {
+			//Display a file chooser to select one or several files
 			JFileChooser fc = new JFileChooser();
 			fc.setMultiSelectionEnabled(true);
 			int returVal = fc.showDialog(this.vue, "Importer");
@@ -126,10 +137,7 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 	
 
 	@Override
-	public void keyTyped(KeyEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void keyTyped(KeyEvent e) {}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
@@ -142,10 +150,7 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 	}
 
 	@Override
-	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void keyReleased(KeyEvent e) {}
 	
 	
 	protected ArrayList<Message> getHistorique(){
@@ -189,10 +194,11 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 		}
 	}
 	
-	//Methode appelee quand l'inputStream de la socket de communication recoit des donnees
+	//Method called when a message is received from the TCP socket 
 	@Override
-	public void update(Object o, Object arg) {
+	public void updateInput(Object o, Object arg) {
 		Message message = (Message) arg;
+		
 		switch(message.getTypeMessage()) {
 		case TEXTE:
 			System.out.println(message.toString());
@@ -217,6 +223,7 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 				this.messagesIn.add(message);
 			}
 			break;
+			
 		case FICHIER_INIT:
 			try {
 				MessageFichier mFichier = (MessageFichier) arg;
@@ -245,16 +252,23 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 			}
 			
 			break;
+			
+		//Do nothing
 		default:
 		}
 		
 	}
 
+	//If the other user closes the session or the communication is broken
+	//Disable the view (TextArea, Buttons..) and display a message
 	@Override
 	public void updateSocketState(Object o, Object arg) {
 		this.vue.endSession(this.pseudoOther);	
 	}
 	
+	/**
+	 * 
+	 */
 	protected void destroyAll() {
 		String idSelf = Utilisateur.getSelf().getId();
 		String idOther = this.idOther;
@@ -263,10 +277,8 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 			this.sqlManager.insertAllMessages(messagesOut, idSelf, idOther);
 			this.sqlManager.insertAllMessages(messagesIn, idOther, idSelf);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 		
 		this.vue = null;
 		this.tcpClient.destroyAll();

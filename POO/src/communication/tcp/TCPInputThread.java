@@ -12,7 +12,12 @@ public class TCPInputThread extends Thread {
 	private ObserverInputMessage obsInput;
 	private ObserverSocketState obsState;
 
-	public TCPInputThread(ObjectInputStream input) {
+	/**
+	 * Create the thread used to read the messages
+	 * 
+	 * @param input 	The ObjectInputStream to read data from
+	 */
+	protected TCPInputThread(ObjectInputStream input) {
 		this.input = input;
 		this.running = true;
 	}
@@ -22,10 +27,9 @@ public class TCPInputThread extends Thread {
 
 		while (this.running) {
 			try {
-				
-				System.out.println("dans read");
-				Object o =  this.input.readObject();
-				this.obsInput.update(this, o);
+				Object o = this.input.readObject();
+				// Notify the observer a message was received
+				this.obsInput.updateInput(this, o);
 
 			} catch (IOException | ClassNotFoundException e) {
 				this.interrupt();
@@ -37,34 +41,35 @@ public class TCPInputThread extends Thread {
 
 	@Override
 	public void interrupt() {
-		
-		try {
-			//Stop the thread
-			this.running = false;
-			//Close the stream and the socket
-			this.input.close();
-			
-			if(this.obsState != null) {
-				//Send an update to the controller
-				this.obsState.updateSocketState(this, true);
-			}
-			
-			
-			//Set every attribute to null so they're collected by the GC
-			this.obsInput = null;
-			this.obsState = null;
-			this.input = null;
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		// Stop the thread
+		this.running = false;
+		// Close the stream and the socket
+
+		if (this.obsState != null) {
+			// Send an update to the controller
+			this.obsState.updateSocketState(this, true);
 		}
+
+		// Set every attribute to null so they're collected by the GC
+		this.obsInput = null;
+		this.obsState = null;
+		this.input = null;
 	}
-	
+
+	/**
+	 * Set the observer to notify when a message is received
+	 * 
+	 * @param o 	The observer
+	 */
 	protected void setObserverInputMessage(ObserverInputMessage o) {
 		this.obsInput = o;
 	}
-	
+
+	/**
+	 * Set the observer to notify when the session is cut/closed.
+	 * 
+	 * @param o 	The observer
+	 */
 	protected void setObserverSocketState(ObserverSocketState o) {
 		this.obsState = o;
 	}

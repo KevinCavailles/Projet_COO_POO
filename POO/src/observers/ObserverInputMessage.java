@@ -1,5 +1,12 @@
 package observers;
 
 public interface ObserverInputMessage {
-	public void update(Object o, Object arg);
+
+	/**
+	 * Method called when data is received from a TCP socket
+	 * 
+	 * @param o   : The observer to notify
+	 * @param arg : An object
+	 */
+	public void updateInput(Object o, Object arg);
 }
