@@ -2,21 +2,26 @@ package connexion;
 
 //Importe les librairies
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 
+import database.SQLiteManager;
 import main.Vue;
 
 public class VueConnexion extends Vue {
 	
+	private static final long serialVersionUID = 1L;
 	//Elements vue
-	private JPanel panel;
 	private JButton boutonValider;
-	private JTextField input;
-	private JLabel labelInput;
+	private JTextField inputUsername;
+	private JPasswordField inputPassword;
+	private JLabel labelUsername;
+	private JLabel labelPassword;
+	private JLabel connexionInfo;
+	private JPanel main;
+	private JPanel panelPassword;
 
 	//Controleur
-	ControleurConnexion controle;
+	private ControleurConnexion controle;
 	
 	//penser à enlever le numtest
 	public VueConnexion(int numtest) {
@@ -25,11 +30,8 @@ public class VueConnexion extends Vue {
 		
 		//Creation fenetre
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setSize(400, 100);
+		this.setSize(400, 300);
 		this.setLocationRelativeTo(null);
-		
-		//Creation panel
-		panel = new JPanel(new GridLayout(3,1));
 		
 		//Ajout elements
 		ajouterElements();
@@ -37,8 +39,8 @@ public class VueConnexion extends Vue {
 		//Regle le bouton par défaut
 		this.getRootPane().setDefaultButton(boutonValider);
 		
-		//Ajoute le panel a la fenetre
-		this.getContentPane().add(panel, BorderLayout.CENTER);
+		this.inputUsername.setText(SQLiteManager.hardcodedNames[numtest]+numtest);
+		this.inputPassword.setText("aze1$"+SQLiteManager.hardcodedNames[numtest].charAt(0)+numtest);
 		
 		//Affiche la fenetre
 		this.setVisible(true);
@@ -46,33 +48,82 @@ public class VueConnexion extends Vue {
 	
 	private void ajouterElements() {
 		
+		//Creation panel
+		main = new JPanel(new GridLayout(4,1));		
+		JPanel panelUsername = new JPanel(new GridLayout(1, 2));
+		this.panelPassword = new JPanel(new GridLayout(1, 2));
+		
 		//Cree les elements
-		input = new JTextField();
-		labelInput = new JLabel("Veuillez entrer votre identifiant unique");
+		this.connexionInfo = new JLabel("");
+		
+		this.inputUsername = new JTextField();
+		this.inputUsername.setPreferredSize(new Dimension(100, 50));
+		
+		this.labelUsername = new JLabel("Nom d'utilisateur");	
+		this.labelUsername.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+		
+		this.inputPassword = new JPasswordField();
+		this.inputPassword.setPreferredSize(new Dimension(100, 50));
+		
+		this.labelPassword = new JLabel("Mot de passe :");
+		this.labelPassword.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+		
 		boutonValider = new JButton("Valider");
 		
 		//Le controleur guette les evenements du bouton
 		boutonValider.addActionListener(controle);
 		
 		//Ajoute les elements
-		panel.add(labelInput);
-		panel.add(input);
-		panel.add(boutonValider);
+		panelUsername.add(this.labelUsername);
+		panelUsername.add(this.inputUsername);
 		
-		labelInput.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+		
+		this.panelPassword.add(this.labelPassword);
+		this.panelPassword.add(this.inputPassword);
+		
+		
+		
+		main.add(connexionInfo);
+		main.add(panelUsername);
+		main.add(this.panelPassword);
+		main.add(boutonValider);
+		
+		this.add(main);
 	}
 	
 	
 	//Getters et setters
-	public void setTexteLabelInput(String text) {
-		labelInput.setText(text);
+	protected void setConnexionInfo(String text) {
+		this.connexionInfo.setText(text);
 	}
 	
-	public String getValeurTextField() {
-		return input.getText();
+	protected void setTextUsernameField(String text) {
+		this.labelUsername.setText(text);
 	}
 	
-	public void resetValeurTextField() {
-		input.setText("");
+	protected String getUsernameValue() {
+		return this.inputUsername.getText();
 	}
+	
+	protected char[] getPasswordValue() {
+		return this.inputPassword.getPassword();
+	}
+	
+	
+	protected void resetUsernameField() {
+		this.inputUsername.setText("");
+	}
+	
+	protected void removePasswordPanel() {
+		this.main.remove(2);
+	}
+	
+	protected void addPasswordPanel() {
+		this.main.add(this.panelPassword, 2);
+	}
+
+	protected void resetPasswordField() {
+		this.inputPassword.setText("");
+	}
+	
 }

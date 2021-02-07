@@ -4,61 +4,81 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.sql.SQLException;
 
-
-import communication.*;
-import main.Observer;
+import communication.udp.CommunicationUDP;
+import database.SQLiteManager;
 import main.Utilisateur;
 import standard.VueStandard;
 
-public class ControleurConnexion implements ActionListener, Observer{
+public class ControleurConnexion implements ActionListener{
 
 	private enum Etat {DEBUT, ID_OK};
 	
 	private VueConnexion vue;
 	private Etat etat;
 	private CommunicationUDP comUDP;
-	private String id;
-	private String pseudo;
 	private int portTCP;
+	private String username;
+	private SQLiteManager sqlManager;
+	private VueStandard vueStd;
 	
 	public ControleurConnexion(VueConnexion vue, int numtest) {
 		this.vue = vue;
 		this.etat = Etat.DEBUT;
-		this.id="";
+		this.username = "";
+		this.sqlManager = new SQLiteManager(0);
+		this.vueStd = null;
 		//Pour les tests, changer pour un truc plus général quand on change CommunicationUDP
+		
+		//Note : 3334 est le port du serveur de présence
+		int[] portServer = {2209, 2309, 2409, 2509, 3334};
 		try {
 			switch(numtest) {
 			case 0 : 
-				this.comUDP = new CommunicationUDP(2208, 2209, new int[] {2309, 2409, 3334});
+				this.comUDP = new CommunicationUDP(2208, 2209, portServer);
 				this.portTCP = 7010;
 				break;
 			case 1 :
-				this.comUDP = new CommunicationUDP(2308, 2309, new int[] {2209, 2409, 3334});
+				this.comUDP = new CommunicationUDP(2308, 2309, portServer);
 				this.portTCP = 7020;
 				break;
 			case 2 :
-				this.comUDP = new CommunicationUDP(2408, 2409, new int[] {2209, 2309, 3334});
+				this.comUDP = new CommunicationUDP(2408, 2409, portServer);
 				this.portTCP = 7030;
 				break;
+			case 3 :
+				this.comUDP = new CommunicationUDP(2508, 2509, portServer);
+				this.portTCP = 7040;
+				break;
 			default :
-				this.comUDP = new CommunicationUDP(2408, 2409, new int[] {2209, 2309, 3334});
+				this.comUDP = new CommunicationUDP(2408, 2409, portServer);
 				this.portTCP = 7040;
 			}
+//			
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		comUDP.setObserver(this);
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		String pseudo;
 		boolean inputOK = false;
 		if (this.etat == Etat.DEBUT) {
-			id=vue.getValeurTextField();
 			
-			//Recherche dans la liste des utilisateurs enregistres, report sur inputOK
-			inputOK = (id.contentEquals("idvalide")||id.contentEquals("idv2")||id.contentEquals("idv2"));
+			this.username = this.vue.getUsernameValue();
+			char[] password = this.vue.getPasswordValue();
+			
+			try {
+				int res = this.sqlManager.checkPwd(this.username, password);
+				inputOK = (res == 1);
+	
+			} catch (SQLException e2) {
+				e2.printStackTrace();
+			}
+			
 			
 			if (inputOK) {
 				this.etat=Etat.ID_OK;
@@ -82,23 +102,30 @@ public class ControleurConnexion implements ActionListener, Observer{
 				}
 				
 				//Mise en place de la demande du pseudo
-				vue.setTexteLabelInput("Veuillez entrer votre nom");
-				vue.resetValeurTextField();
+				this.vue.setConnexionInfo("");
+				this.vue.removePasswordPanel();
+				
+				this.vue.setTextUsernameField("Veuillez entrer votre pseudonyme");
+				this.vue.resetUsernameField();
 				inputOK=false;
 			}
-			else vue.setTexteLabelInput("Identifiant invalide, veuillez réessayer");
+			else {
+				this.vue.setConnexionInfo("Identifiant ou mot de passe invalide, veuillez réessayer");
+				this.vue.resetPasswordField();
+			}
+			
 		}
 		else {
-			this.pseudo=vue.getValeurTextField();
+			pseudo = vue.getUsernameValue();
 			
 			//Recherche dans la liste locale des utilisateurs connectes, report sur inputOK
-			inputOK = !this.comUDP.containsUserFromPseudo(this.pseudo);
-			if(this.pseudo.equals("")) {
-				this.vue.setTexteLabelInput("Votre pseudonyme doit contenir au moins 1 caratère");
+			inputOK = !this.comUDP.containsUserFromPseudo(pseudo);
+			if(pseudo.equals("")) {
+				this.vue.setConnexionInfo("Votre pseudonyme doit contenir au moins 1 caratère");
 			}else if (inputOK) {
 				//Reglage de l'utilisateur
 				try {
-					Utilisateur.setSelf(this.id, this.pseudo, "localhost", this.portTCP);
+					Utilisateur.setSelf(this.username, pseudo, "localhost", this.portTCP);
 				} catch (UnknownHostException e2) {
 					// TODO Auto-generated catch block
 					e2.printStackTrace();
@@ -108,28 +135,42 @@ public class ControleurConnexion implements ActionListener, Observer{
 				try {
 					this.comUDP.sendMessageInfoPseudo();
 				} catch (UnknownHostException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+					
 				try {
-					this.vue.close();
-					new VueStandard("Standard", comUDP, this.portTCP);
+					this.resetView();
+					this.vue.setVisible(false);
+					this.setVueStandard();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
-			else this.vue.setTexteLabelInput("Ce nom est déjà utilisé, veuillez en choisir un autre");
+			else this.vue.setConnexionInfo("Ce nom est déjà utilisé, veuillez en choisir un autre");
 		}
 	}
 
-	@Override
-	public void update(Object o, Object arg) {
-		// TODO Auto-generated method stub
+	
+	private void setVueStandard() throws IOException {
+		if(this.vueStd == null) {
+			this.vueStd = new VueStandard("Standard", this.comUDP, this.portTCP, this.sqlManager, this.vue);
+			
+		}else {
+			this.vueStd.initControleur();
+			this.vueStd.setPseudoSelf();
+			this.vueStd.setVisible(true);
+		}
+	}
+	
+	private void resetView() {
+		this.etat = Etat.DEBUT;
+		this.vue.addPasswordPanel();
+		this.vue.resetPasswordField();
+		this.vue.resetUsernameField();
+		this.vue.setTextUsernameField("Nom d'utilisateur");
+		this.vue.setConnexionInfo("");
 		
 	}
-
 }
