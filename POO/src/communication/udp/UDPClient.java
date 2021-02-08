@@ -14,7 +14,7 @@ class UDPClient {
 	private DatagramSocket sockUDP;
 
 	/**
-	 * Create a UDP client on the specified port. It will be used to notify the
+	 * Create an UDP client on the specified port. It will be used to notify the
 	 * other users of this application's user state (Connected/Disconnected/Pseudo
 	 * changed).
 	 * 

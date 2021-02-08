@@ -17,7 +17,7 @@ class UDPServer extends Thread {
 
 	
 	/**
-	 * Create a UDP Server on the specified port. It will be used to read the
+	 * Create an UDP Server on the specified port. It will be used to read the
 	 * other users states (Connected/Disconnected/Pseudo).
 	 * 
 	 * @param port

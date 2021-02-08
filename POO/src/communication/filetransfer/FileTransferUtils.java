@@ -102,7 +102,7 @@ public class FileTransferUtils {
 	}
 
 	/**
-	 * @param imageString 	The base64 encoded string of an image.
+	 * @param imageString 		The base64 encoded string of an image.
 	 * @return A buffered image corresponding to the given base64 encoded string.
 	 * @throws IOException
 	 */

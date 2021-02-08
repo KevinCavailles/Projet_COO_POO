@@ -74,7 +74,7 @@ public class TCPClient {
 	}
 
 	/**
-	 * Method used when the session is over. Set all attribute references to null,
+	 * Method used when the session is over. Set all attributes' references to null,
 	 * interrupt the inputThread and close the streams and the socket.
 	 */
 	public void destroyAll() {

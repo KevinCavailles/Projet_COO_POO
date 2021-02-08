@@ -242,7 +242,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		return input.readLine();
 	}
 
-	// ------------OBSERVERS-------------//
+	// ------------OBSERVERS------------- //
 
 	@Override
 	public void updateInput(Object o, Object arg) {

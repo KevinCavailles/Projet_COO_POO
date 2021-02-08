@@ -20,7 +20,7 @@ public class CommunicationUDP extends Thread {
 	private ObserverUserList obsList;
 
 	/**
-	 * Create the class that will manage the userlist and contain a UDPClient and a
+	 * Create the object that will manage the userlist and contain a UDPClient and a
 	 * UDPServer. Since the applications will run on localhost, it needs to know
 	 * every UDPServer ports used in order to replicate a broadcast behaviour.
 	 * 
@@ -63,7 +63,7 @@ public class CommunicationUDP extends Thread {
 		this.obsList = o;
 	}
 
-	// -------------- USER LIST UPDATE FUNCTION --------------//
+	// -------------- USER LIST UPDATE METHODS -------------- //
 
 	/**
 	 * Add a new user to the userlist and notify the observer.
@@ -122,13 +122,13 @@ public class CommunicationUDP extends Thread {
 		this.users.clear();
 	}
 
-	// -------------- CHECKERS --------------//
+	// -------------- CHECKERS -------------- //
 
 	/**
 	 * Check if there is an user in the list that has the given id.
 	 * 
 	 * @param id 	The user's id.
-	 * @return true if the user is in the list 
+	 * @return True if the user is in the list 
 	 * false otherwise.
 	 */
 	protected boolean containsUserFromID(String id) {
@@ -144,7 +144,7 @@ public class CommunicationUDP extends Thread {
 	 * Check if there is an user in the list that has the given pseudo.
 	 * 
 	 * @param pseudo 	The user's pseudo.
-	 * @return true if the user is in the list 
+	 * @return True if the user is in the list 
 	 * false otherwise.
 	 */
 	public boolean containsUserFromPseudo(String pseudo) {
@@ -157,7 +157,7 @@ public class CommunicationUDP extends Thread {
 		return false;
 	}
 
-	// -------------- GETTERS --------------//
+	// -------------- GETTERS -------------- //
 
 	/**
 	 * Return the user with the given pseudo if it exists in the list.
@@ -191,7 +191,7 @@ public class CommunicationUDP extends Thread {
 		return -1;
 	}
 
-	// -------------- SEND MESSAGES --------------//
+	// -------------- SEND MESSAGES METHODS -------------- //
 
 	/**
 	 * Send a message indicating this application's user is connected to every
@@ -279,6 +279,9 @@ public class CommunicationUDP extends Thread {
 			e.printStackTrace();
 		}
 	}
+	
+	
+	// -------------- OTHERS -------------- //
 
 	/**
 	 * Notify the observer with the updated list
