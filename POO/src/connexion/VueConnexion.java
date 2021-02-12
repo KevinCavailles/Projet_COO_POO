@@ -6,11 +6,13 @@ import javax.swing.*;
 
 import database.SQLiteManager;
 import main.Vue;
+import messages.MauvaisTypeMessageException;
 
 public class VueConnexion extends Vue {
 	
 	private static final long serialVersionUID = 1L;
-	//Elements vue
+	
+	//Graphical elements
 	private JButton boutonValider;
 	private JTextField inputUsername;
 	private JPasswordField inputPassword;
@@ -20,40 +22,53 @@ public class VueConnexion extends Vue {
 	private JPanel main;
 	private JPanel panelPassword;
 
-	//Controleur
+	//Controller
 	private ControleurConnexion controle;
 	
-	//penser à enlever le numtest
+	/**
+	 * Create and initialize the view SWING window that will be used during the connection phase.
+	 * Doing so, it also creates the controller that will monitor all changes during the connection phase.
+	 * 
+	 * @param numtest : to be passed down to the controller
+	 * 
+	 */
 	public VueConnexion(int numtest) {
 		super("Connexion");
 		controle = new ControleurConnexion(this, numtest);
 		
-		//Creation fenetre
+		//Window creation
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setSize(400, 300);
 		this.setLocationRelativeTo(null);
 		
-		//Ajout elements
+		//Adding graphical elements
 		ajouterElements();
 		
-		//Regle le bouton par défaut
+		//Setting default button
 		this.getRootPane().setDefaultButton(boutonValider);
 		
 		this.inputUsername.setText(SQLiteManager.hardcodedNames[numtest]+numtest);
 		this.inputPassword.setText("aze1$"+SQLiteManager.hardcodedNames[numtest].charAt(0)+numtest);
 		
-		//Affiche la fenetre
+		//Display window
 		this.setVisible(true);
 	}
 	
+	
+	// ----- ADDING ELEMENTS TO AND REMOVING ELEMENTS FROM THE MAIN WINDOW ----- //
+	
+	
+	/**
+	 * Add various graphical elements to the main window : used when initializing the window
+	 */
 	private void ajouterElements() {
 		
-		//Creation panel
+		//Create a panel
 		main = new JPanel(new GridLayout(4,1));		
 		JPanel panelUsername = new JPanel(new GridLayout(1, 2));
 		this.panelPassword = new JPanel(new GridLayout(1, 2));
 		
-		//Cree les elements
+		//Create various elements
 		this.connexionInfo = new JLabel("");
 		
 		this.inputUsername = new JTextField();
@@ -70,17 +85,16 @@ public class VueConnexion extends Vue {
 		
 		boutonValider = new JButton("Valider");
 		
-		//Le controleur guette les evenements du bouton
+		//Make it so the controller is monitoring the button
 		boutonValider.addActionListener(controle);
 		
-		//Ajoute les elements
+		
 		panelUsername.add(this.labelUsername);
 		panelUsername.add(this.inputUsername);
 		
 		
 		this.panelPassword.add(this.labelPassword);
 		this.panelPassword.add(this.inputPassword);
-		
 		
 		
 		main.add(connexionInfo);
@@ -91,15 +105,16 @@ public class VueConnexion extends Vue {
 		this.add(main);
 	}
 	
-	
-	//Getters et setters
-	protected void setConnexionInfo(String text) {
-		this.connexionInfo.setText(text);
+	protected void removePasswordPanel() {
+		this.main.remove(2);
 	}
 	
-	protected void setTextUsernameField(String text) {
-		this.labelUsername.setText(text);
+	protected void addPasswordPanel() {
+		this.main.add(this.panelPassword, 2);
 	}
+
+	
+	//----- GETTERS -----//
 	
 	protected String getUsernameValue() {
 		return this.inputUsername.getText();
@@ -110,17 +125,20 @@ public class VueConnexion extends Vue {
 	}
 	
 	
+	//----- SETTERS -----//
+	
+	protected void setConnexionInfo(String text) {
+		this.connexionInfo.setText(text);
+	}
+	
+	protected void setTextUsernameField(String text) {
+		this.labelUsername.setText(text);
+	}
+	
 	protected void resetUsernameField() {
 		this.inputUsername.setText("");
 	}
 	
-	protected void removePasswordPanel() {
-		this.main.remove(2);
-	}
-	
-	protected void addPasswordPanel() {
-		this.main.add(this.panelPassword, 2);
-	}
 
 	protected void resetPasswordField() {
 		this.inputPassword.setText("");
