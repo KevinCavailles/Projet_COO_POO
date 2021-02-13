@@ -29,7 +29,6 @@ public class ControleurConnexion implements ActionListener{
 		this.username = "";
 		this.sqlManager = new SQLiteManager(0);
 		this.vueStd = null;
-		//Pour les tests, changer pour un truc plus général quand on change CommunicationUDP
 		
 		int[] portServer = {2209, 2309, 2409, 2509};
 		try {
@@ -53,8 +52,7 @@ public class ControleurConnexion implements ActionListener{
 			default :
 				this.comUDP = new CommunicationUDP(2408, 2409, portServer);
 				this.portTCP = 7040;
-			}
-//			
+			}			
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -82,25 +80,18 @@ public class ControleurConnexion implements ActionListener{
 			if (inputOK) {
 				this.etat=Etat.ID_OK;
 
-				//Envoi broadcast du message "JeSuisActif" et, attente du retour de la liste des utilisateurs actifs
+				//Broadcast "JE_SUIS_CONNECTE" message and waits for the other devices' answers
 				try {
 					comUDP.sendMessageConnecte();
-				} catch (UnknownHostException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				} catch (IOException e2) {
 				}
-				
+			
 				try {
 					Thread.sleep(2);
 				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
 				}
 				
-				//Mise en place de la demande du pseudo
+				//setup pseudo ask
 				this.vue.setConnexionInfo("");
 				this.vue.removePasswordPanel();
 				
@@ -117,12 +108,12 @@ public class ControleurConnexion implements ActionListener{
 		else {
 			pseudo = vue.getUsernameValue();
 			
-			//Recherche dans la liste locale des utilisateurs connectes, report sur inputOK
+			//Search in the local list of active users id the chosen pseudo is already in use 
 			inputOK = !this.comUDP.containsUserFromPseudo(pseudo);
 			if(pseudo.equals("")) {
 				this.vue.setConnexionInfo("Votre pseudonyme doit contenir au moins 1 caratère");
 			}else if (inputOK) {
-				//Reglage de l'utilisateur
+				//setup Utilisateur "self" static attribute
 				try {
 					Utilisateur.setSelf(this.username, pseudo, "localhost", this.portTCP);
 				} catch (UnknownHostException e2) {
@@ -130,7 +121,7 @@ public class ControleurConnexion implements ActionListener{
 					e2.printStackTrace();
 				}
 				
-				//Broadcast du pseudo
+				//broadcast new pseudo
 				try {
 					this.comUDP.sendMessageInfoPseudo();
 				} catch (UnknownHostException e1) {

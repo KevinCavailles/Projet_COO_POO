@@ -116,10 +116,20 @@ public class VueConnexion extends Vue {
 	
 	//----- GETTERS -----//
 	
+	/**
+	 * Returns the current value of the field inputUsername
+	 * 
+	 * @return current value of the field inputUsername as String
+	 */
 	protected String getUsernameValue() {
 		return this.inputUsername.getText();
 	}
 	
+	/**
+	 * Returns the current value of the field inputPassword
+	 * 
+	 * @return current value of the field inputPassword as String
+	 */
 	protected char[] getPasswordValue() {
 		return this.inputPassword.getPassword();
 	}
@@ -127,19 +137,34 @@ public class VueConnexion extends Vue {
 	
 	//----- SETTERS -----//
 	
+	/**
+	 * Set a displayed message that will give the user information (for example if they entered a wrong password)
+	 * 
+	 * @param text : message to display as String
+	 */
 	protected void setConnexionInfo(String text) {
 		this.connexionInfo.setText(text);
 	}
 	
+	/**
+	 * Set the label for the inputUsername fiel
+	 * 
+	 * @param text : label to display as String
+	 */
 	protected void setTextUsernameField(String text) {
 		this.labelUsername.setText(text);
 	}
 	
+	/**
+	 * Empty the inputUsername text field
+	 */
 	protected void resetUsernameField() {
 		this.inputUsername.setText("");
 	}
 	
-
+	/**
+	 * Empty the inputPassword text field
+	 */
 	protected void resetPasswordField() {
 		this.inputPassword.setText("");
 	}
