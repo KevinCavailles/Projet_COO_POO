@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
+//import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
@@ -13,14 +13,14 @@ import messages.*;
 public class UDPClient {
 
 	private DatagramSocket sockUDP;
-	private InetAddress broadcast;
+	//private InetAddress broadcast;
 	
 	public UDPClient(int port) throws SocketException, UnknownHostException {
 		this.sockUDP = new DatagramSocket(port);
 		
-		InetAddress localHost = InetAddress.getLocalHost();
-		NetworkInterface networkInterface = NetworkInterface.getByInetAddress(localHost);
-		this.broadcast = networkInterface.getInterfaceAddresses().get(0).getBroadcast();
+		//InetAddress localHost = InetAddress.getLocalHost();
+		//NetworkInterface networkInterface = NetworkInterface.getByInetAddress(localHost);
+		//this.broadcast = networkInterface.getInterfaceAddresses().get(0).getBroadcast();
 	}
 	
 	

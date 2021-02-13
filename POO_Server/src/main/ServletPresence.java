@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -14,9 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import communication.CommunicationUDP;
-import database.SQLiteManager;
 import messages.*;
-import messages.Message.TypeMessage;
 
 /**
  * Servlet implementation class ServletPresence
@@ -30,10 +29,9 @@ public class ServletPresence extends HttpServlet implements Observer {
 	
 	private CommunicationUDP comUDP;
 	private ArrayList<Utilisateur> remoteUsers;
-	private SQLiteManager sqlManager;
- 
+	private String[] registeredRemoteUsers = {"user1","user2","user3"};
+	
     public ServletPresence() {
-    	//A changer en passant aux IP
         try {
 			comUDP = new CommunicationUDP(3333, 3334, new int[] {2209, 2309, 2409, 3334});
 		} catch (IOException e) {
@@ -47,8 +45,6 @@ public class ServletPresence extends HttpServlet implements Observer {
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
-        
-        sqlManager = new SQLiteManager(0);
     }
     
     private int getIndexByID(String id) {
@@ -184,7 +180,7 @@ public class ServletPresence extends HttpServlet implements Observer {
 		
 		//Si l'id n'existe pas dans la BDD : génère du html pour en informer l'utilisateur
 		try {
-			if (sqlManager.getIDUser(id)==-1) {
+			if (!Arrays.asList(registeredRemoteUsers).contains(id)) {
 				printErrorUnkwownUser(out);
 			}
 			
@@ -205,7 +201,7 @@ public class ServletPresence extends HttpServlet implements Observer {
 				}
 				printActiveUsersOnly(out);
 			}
-		} catch (UnknownHostException | SQLException e) {
+		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

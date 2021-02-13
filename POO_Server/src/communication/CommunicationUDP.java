@@ -95,15 +95,6 @@ public class CommunicationUDP extends Thread {
 		return null;
 	}
 	
-	private int getIndexFromIP(InetAddress ip) {
-		for(int i=0; i < users.size() ; i++) {
-			if(users.get(i).getIp().equals(ip)) {
-				return i;
-			}
-		}
-		return -1;
-	}
-	
 	 public void printActiveUsersUDP(PrintWriter out) {
 		    for (Utilisateur uIn : users) {
 		    	out.println("<TH> " + uIn.getPseudo() + ",</TH>");
