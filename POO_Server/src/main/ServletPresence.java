@@ -22,7 +22,7 @@ import messages.*;
  */
 @WebServlet("/ServletPresence")
 
-//Faire un publish (get) séparé en utilisant les cookies pour stocker les modifications : pose problème au niveau de la synchro des pseudos (à dire rapport)
+//Faire un publish (get) séparé en utilisant les cookies pour stocker les modifications : pose problème au niveau de la synchro des pseudos
 
 public class ServletPresence extends HttpServlet implements Observer {
 	private static final long serialVersionUID = 1L;
