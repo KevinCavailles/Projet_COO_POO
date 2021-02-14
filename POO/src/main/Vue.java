@@ -2,6 +2,9 @@ package main;
 
 import javax.swing.JFrame;
 
+
+// General class from which all VueX class derivate
+
 public class Vue extends JFrame{
 
 	private static final long serialVersionUID = 1L;

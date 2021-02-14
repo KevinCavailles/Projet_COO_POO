@@ -1,12 +1,11 @@
 package connexion;
 
-//Importe les librairies
+//Import librairies
 import java.awt.*;
 import javax.swing.*;
 
 import database.SQLiteManager;
 import main.Vue;
-import messages.MauvaisTypeMessageException;
 
 public class VueConnexion extends Vue {
 	

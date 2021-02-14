@@ -13,6 +13,7 @@ import standard.VueStandard;
 
 public class ControleurConnexion implements ActionListener{
 
+	//Controller state : either DEBUT at initialization or ID_OK if the user has signed in
 	private enum Etat {DEBUT, ID_OK};
 	
 	private VueConnexion vue;
@@ -23,6 +24,14 @@ public class ControleurConnexion implements ActionListener{
 	private SQLiteManager sqlManager;
 	private VueStandard vueStd;
 	
+
+	/**
+	 * Create and initialize the object in charge of monitoring all actions depending on what the user do.
+	 * 
+	 * @param vue : associated instance of VueConnexion
+	 * @param numtest : on local mode, allows you to choose which port to use. Integer between 0 and 3
+	 * 
+	 */
 	public ControleurConnexion(VueConnexion vue, int numtest) {
 		this.vue = vue;
 		this.etat = Etat.DEBUT;
@@ -55,9 +64,9 @@ public class ControleurConnexion implements ActionListener{
 			}			
 			
 		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
+	
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -73,7 +82,6 @@ public class ControleurConnexion implements ActionListener{
 				inputOK = (res == 1);
 	
 			} catch (SQLException e2) {
-				e2.printStackTrace();
 			}
 			
 			
@@ -117,17 +125,13 @@ public class ControleurConnexion implements ActionListener{
 				try {
 					Utilisateur.setSelf(this.username, pseudo, "localhost", this.portTCP);
 				} catch (UnknownHostException e2) {
-					// TODO Auto-generated catch block
-					e2.printStackTrace();
 				}
 				
 				//broadcast new pseudo
 				try {
 					this.comUDP.sendMessageInfoPseudo();
 				} catch (UnknownHostException e1) {
-					e1.printStackTrace();
 				} catch (IOException e1) {
-					e1.printStackTrace();
 				}
 					
 				try {
@@ -135,7 +139,6 @@ public class ControleurConnexion implements ActionListener{
 					this.vue.setVisible(false);
 					this.setVueStandard();
 				} catch (IOException e1) {
-					e1.printStackTrace();
 				}
 			}
 			else this.vue.setConnexionInfo("Ce nom est déjà utilisé, veuillez en choisir un autre");
@@ -143,6 +146,12 @@ public class ControleurConnexion implements ActionListener{
 	}
 
 	
+	// ----- SETTING & RESETTING VIEW ----- //
+	
+	/**
+	 * Create a new VueStandard instance and give it the hand.
+	 * 
+	 */
 	private void setVueStandard() throws IOException {
 		if(this.vueStd == null) {
 			this.vueStd = new VueStandard("Standard", this.comUDP, this.portTCP, this.sqlManager, this.vue);
@@ -153,7 +162,11 @@ public class ControleurConnexion implements ActionListener{
 			this.vueStd.setVisible(true);
 		}
 	}
-	
+
+	/**
+	 * Restore the associated instance of VueConnexion to its initial state
+	 * 
+	 */
 	private void resetView() {
 		this.etat = Etat.DEBUT;
 		this.vue.addPasswordPanel();
