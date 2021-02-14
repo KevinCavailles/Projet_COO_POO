@@ -13,6 +13,7 @@ import standard.VueStandard;
 
 public class ControleurConnexion implements ActionListener{
 
+	//Controller state : either DEBUT at initialization or ID_OK if the user has signed in
 	private enum Etat {DEBUT, ID_OK};
 	
 	private VueConnexion vue;
@@ -23,16 +24,22 @@ public class ControleurConnexion implements ActionListener{
 	private SQLiteManager sqlManager;
 	private VueStandard vueStd;
 	
+
+	/**
+	 * Create and initialize the object in charge of monitoring all actions depending on what the user do.
+	 * 
+	 * @param vue : associated instance of VueConnexion
+	 * @param numtest : on local mode, allows you to choose which port to use. Integer between 0 and 3
+	 * 
+	 */
 	public ControleurConnexion(VueConnexion vue, int numtest) {
 		this.vue = vue;
 		this.etat = Etat.DEBUT;
 		this.username = "";
 		this.sqlManager = new SQLiteManager(0);
 		this.vueStd = null;
-		//Pour les tests, changer pour un truc plus général quand on change CommunicationUDP
 		
-		//Note : 3334 est le port du serveur de présence
-		int[] portServer = {2209, 2309, 2409, 2509, 3334};
+		int[] portServer = {2209, 2309, 2409, 2509};
 		try {
 			switch(numtest) {
 			case 0 : 
@@ -54,13 +61,12 @@ public class ControleurConnexion implements ActionListener{
 			default :
 				this.comUDP = new CommunicationUDP(2408, 2409, portServer);
 				this.portTCP = 7040;
-			}
-//			
+			}			
 			
 		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
+	
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -76,32 +82,24 @@ public class ControleurConnexion implements ActionListener{
 				inputOK = (res == 1);
 	
 			} catch (SQLException e2) {
-				e2.printStackTrace();
 			}
 			
 			
 			if (inputOK) {
 				this.etat=Etat.ID_OK;
 
-				//Envoi broadcast du message "JeSuisActif" et, attente du retour de la liste des utilisateurs actifs
+				//Broadcast "JE_SUIS_CONNECTE" message and waits for the other devices' answers
 				try {
 					comUDP.sendMessageConnecte();
-				} catch (UnknownHostException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				} catch (IOException e2) {
 				}
-				
+			
 				try {
 					Thread.sleep(2);
 				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
 				}
 				
-				//Mise en place de la demande du pseudo
+				//setup pseudo ask
 				this.vue.setConnexionInfo("");
 				this.vue.removePasswordPanel();
 				
@@ -118,26 +116,22 @@ public class ControleurConnexion implements ActionListener{
 		else {
 			pseudo = vue.getUsernameValue();
 			
-			//Recherche dans la liste locale des utilisateurs connectes, report sur inputOK
+			//Search in the local list of active users id the chosen pseudo is already in use 
 			inputOK = !this.comUDP.containsUserFromPseudo(pseudo);
 			if(pseudo.equals("")) {
 				this.vue.setConnexionInfo("Votre pseudonyme doit contenir au moins 1 caratère");
 			}else if (inputOK) {
-				//Reglage de l'utilisateur
+				//setup Utilisateur "self" static attribute
 				try {
 					Utilisateur.setSelf(this.username, pseudo, "localhost", this.portTCP);
 				} catch (UnknownHostException e2) {
-					// TODO Auto-generated catch block
-					e2.printStackTrace();
 				}
 				
-				//Broadcast du pseudo
+				//broadcast new pseudo
 				try {
 					this.comUDP.sendMessageInfoPseudo();
 				} catch (UnknownHostException e1) {
-					e1.printStackTrace();
 				} catch (IOException e1) {
-					e1.printStackTrace();
 				}
 					
 				try {
@@ -145,7 +139,6 @@ public class ControleurConnexion implements ActionListener{
 					this.vue.setVisible(false);
 					this.setVueStandard();
 				} catch (IOException e1) {
-					e1.printStackTrace();
 				}
 			}
 			else this.vue.setConnexionInfo("Ce nom est déjà utilisé, veuillez en choisir un autre");
@@ -153,6 +146,12 @@ public class ControleurConnexion implements ActionListener{
 	}
 
 	
+	// ----- SETTING & RESETTING VIEW ----- //
+	
+	/**
+	 * Create a new VueStandard instance and give it the hand.
+	 * 
+	 */
 	private void setVueStandard() throws IOException {
 		if(this.vueStd == null) {
 			this.vueStd = new VueStandard("Standard", this.comUDP, this.portTCP, this.sqlManager, this.vue);
@@ -163,7 +162,11 @@ public class ControleurConnexion implements ActionListener{
 			this.vueStd.setVisible(true);
 		}
 	}
-	
+
+	/**
+	 * Restore the associated instance of VueConnexion to its initial state
+	 * 
+	 */
 	private void resetView() {
 		this.etat = Etat.DEBUT;
 		this.vue.addPasswordPanel();

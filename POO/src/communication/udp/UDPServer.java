@@ -8,13 +8,22 @@ import java.net.SocketException;
 import main.Utilisateur;
 import messages.*;
 
-public class UDPServer extends Thread {
+class UDPServer extends Thread {
 
 	private DatagramSocket sockUDP;
 	private CommunicationUDP commUDP;
 	private byte[] buffer;
 	private boolean running;
 
+	
+	/**
+	 * Create an UDP Server on the specified port. It will be used to read the
+	 * other users states (Connected/Disconnected/Pseudo).
+	 * 
+	 * @param port
+	 * @param commUDP
+	 * @throws SocketException
+	 */
 	public UDPServer(int port, CommunicationUDP commUDP) throws SocketException {
 		this.running = true;
 		this.commUDP = commUDP;
@@ -27,12 +36,14 @@ public class UDPServer extends Thread {
 		while (this.running) {
 
 			try {
-
+				
+				//When a datagram is received, converts its data in a Message
 				DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
 				this.sockUDP.receive(inPacket);
 				String msgString = new String(inPacket.getData(), 0, inPacket.getLength());
 				Message msg = Message.stringToMessage(msgString);
 
+				//Depending on the type of the message
 				switch (msg.getTypeMessage()) {
 				case JE_SUIS_CONNECTE:
 
@@ -40,34 +51,38 @@ public class UDPServer extends Thread {
 						
 						int portClient = inPacket.getPort();
 						int portServer = portClient+1;
+						
+						//Answer back with this application's user data
 						this.commUDP.sendMessageInfoPseudo(portServer);
 					}
 
 					break;
 
 				case INFO_PSEUDO:
+					
 					MessageSysteme m = (MessageSysteme) msg;
-
+					
+					//Update the userlist with the data received (Add the user or update it)
 					if (this.commUDP.containsUserFromID(m.getId())) {
 						this.commUDP.changePseudoUser(m.getId(), m.getPseudo(), inPacket.getAddress(), m.getPort());
 					} else {
-
 						this.commUDP.addUser(m.getId(), m.getPseudo(), inPacket.getAddress(), m.getPort());
-						System.out.println(m.getId() + ", " + m.getPseudo());
 					}
 					break;
 
 				case JE_SUIS_DECONNECTE:
-					this.commUDP.removeUser(((MessageSysteme) msg).getId(), ((MessageSysteme) msg).getPseudo(),
-							inPacket.getAddress(), inPacket.getPort());
+					
+					MessageSysteme m2 = (MessageSysteme) msg;
+					//Remove the user from the userlist
+					this.commUDP.removeUser(m2.getId(), m2.getPseudo(), inPacket.getAddress(), m2.getPort());
 					break;
 
-				default: // Others types of messages are ignored because they are supposed to be
-							// transmitted by TCP and not UDP
+				//Do nothing
+				default: 
 				}
 
 			} catch (IOException e) {
-				System.out.println("receive exception");
+				e.printStackTrace();
 			}
 
 		}

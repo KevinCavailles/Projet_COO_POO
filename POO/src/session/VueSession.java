@@ -39,9 +39,6 @@ import messages.Message.TypeMessage;
 
 public class VueSession extends JPanel {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	private JButton sendMessage;
@@ -58,12 +55,7 @@ public class VueSession extends JPanel {
 		this.setBorder(new EmptyBorder(5, 5, 5, 5));
 		this.setLayout(new BorderLayout(0, 0));
 
-		this.chatInput = new JTextArea();
-		this.chatInput.setColumns(10);
-		this.chatInput.setLineWrap(true);
-		this.chatInput.setWrapStyleWord(true);
-		this.chatInput.addKeyListener(this.c);
-
+		// Create the display zone
 		this.chatWindow = new JTextPane();
 		this.chatWindow.setEditable(false);
 		this.chatWindow.setEditorKit(new WrapEditorKit());
@@ -71,21 +63,32 @@ public class VueSession extends JPanel {
 		JScrollPane chatScroll = new JScrollPane(this.chatWindow);
 		chatScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 
+		// Create the input zone
+		this.chatInput = new JTextArea();
+		this.chatInput.setColumns(10);
+		this.chatInput.setLineWrap(true);
+		this.chatInput.setWrapStyleWord(true);
+		this.chatInput.addKeyListener(this.c);
+
 		JPanel bottom = new JPanel();
 		bottom.setLayout(new BorderLayout(0, 0));
 
-		// remap "ENTER" to "none" to avoid "\n" in the input area after sending message
+		// Remap "ENTER" to "none" to avoid "\n" in the input area when pressing "ENTER"
+		// to send a message
 		KeyStroke enter = KeyStroke.getKeyStroke("ENTER");
 		this.chatInput.getInputMap().put(enter, "none");
 		KeyStroke shiftEnter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.SHIFT_DOWN_MASK);
 		this.chatInput.getInputMap().put(shiftEnter, "insert-break");
 
-		this.importFile = new JButton("Importer..");
-		this.importFile.addActionListener(this.c);
-
+		// Create a scroller to be able to send messages of several lines
 		JScrollPane inputScroll = new JScrollPane(this.chatInput);
 		inputScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
+		// Import file button
+		this.importFile = new JButton("Importer..");
+		this.importFile.addActionListener(this.c);
+
+		// Send message button
 		this.sendMessage = new JButton("Envoyer");
 		this.sendMessage.addActionListener(this.c);
 
@@ -93,6 +96,7 @@ public class VueSession extends JPanel {
 		bottom.add(inputScroll, BorderLayout.CENTER);
 		bottom.add(this.sendMessage, BorderLayout.EAST);
 
+		// Add the components to the view
 		this.add(chatScroll, BorderLayout.CENTER);
 		this.add(bottom, BorderLayout.SOUTH);
 
@@ -102,32 +106,30 @@ public class VueSession extends JPanel {
 
 	}
 
+	// -------------- GETTERS -------------- //
+
 	protected JButton getButtonEnvoyer() {
 		return this.sendMessage;
 	}
 
+	
 	protected JButton getButtonImportFile() {
 		return this.importFile;
 	}
 
+	
 	protected String getInputedText() {
 		return this.chatInput.getText();
 	}
-
-	protected void appendInputedText(String str) {
-		this.chatInput.append(str);
-	}
-
-
-	protected void resetZoneSaisie() {
-		this.chatInput.setText("");
-		
-	}
-
-	private void setCaretToEnd() {
-		this.chatWindow.setCaretPosition(this.chatWindow.getDocument().getLength());
-	}
 	
+
+	// -------------- DISPLAY METHODS -------------- //
+
+	/**
+	 * Append the given string to the ChatWindow.
+	 * 
+	 * @param str
+	 */
 	protected void appendString(String str) {
 		try {
 			Document doc = this.chatWindow.getDocument();
@@ -137,12 +139,16 @@ public class VueSession extends JPanel {
 		}
 	}
 
+	
+	/**
+	 * Append the given Message to the ChatWindow.
+	 * 
+	 * @param message
+	 */
 	protected void appendMessage(Message message) {
 
 		try {
 			StyledDocument sdoc = this.chatWindow.getStyledDocument();
-			// sdoc.setParagraphAttributes(sdoc.getLength(), message.toString().length()-1,
-			// style, false);
 			sdoc.insertString(sdoc.getLength(), message.toString(), null);
 
 		} catch (BadLocationException e) {
@@ -150,9 +156,17 @@ public class VueSession extends JPanel {
 		}
 	}
 
+	
+	/**
+	 * Append an icon with the image contained in the given message. The message has
+	 * to contain the base64 encoded bytes of the image as a String for it to be
+	 * decoded and displayed.
+	 * 
+	 * @param message
+	 */
 	protected void appendImage(Message message) {
 		this.setCaretToEnd();
-		
+
 		String imgString = message.toString();
 		Icon ic;
 		try {
@@ -160,34 +174,52 @@ public class VueSession extends JPanel {
 			ic = new ImageIcon(img);
 			this.chatWindow.insertIcon(ic);
 			this.appendString("\n");
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		
+
 	}
 
+	
 	private void printLineSeparator() {
 		this.appendString("------------------------------------------\n");
 	}
 
-	protected void endSession(String pseudoOther) {
-		this.printLineSeparator();
-		this.appendString(pseudoOther + " a mis fin à la session.");
-		this.chatInput.setEnabled(false);
-		this.chatInput.setFocusable(false);
-		this.sendMessage.setEnabled(false);
-		this.importFile.setEnabled(false);
+	/**
+	 * Append the given string to the ChatInput.
+	 * 
+	 * @param str
+	 */
+	protected void appendInputedText(String str) {
+		this.chatInput.append(str);
 	}
 
+	
+	protected void resetZoneSaisie() {
+		this.chatInput.setText("");
+
+	}
+
+	
+	// -------------- OTHERS -------------- //
+
+	private void setCaretToEnd() {
+		this.chatWindow.setCaretPosition(this.chatWindow.getDocument().getLength());
+	}
+
+	
+	/**
+	 * Retrieve all the previous messages from the controller and display them by
+	 * appending them one by one to the ChatWindow.
+	 */
 	private void displayHistorique() {
 		ArrayList<Message> historique = this.c.getHistorique();
 
 		for (Message m : historique) {
-			if(m.getTypeMessage() == TypeMessage.IMAGE) {
+			if (m.getTypeMessage() == TypeMessage.IMAGE) {
 				this.appendImage(m);
-			}else {
+			} else {
 				this.appendMessage(m);
 			}
 		}
@@ -197,6 +229,27 @@ public class VueSession extends JPanel {
 		}
 	}
 
+	
+	/**
+	 * Disable the ChatInput, the buttons "Importer" and "Envoyer" and display a
+	 * message indicating the other user ended the session.
+	 * 
+	 * @param pseudoOther
+	 */
+	protected void endSession(String pseudoOther) {
+		this.printLineSeparator();
+		this.appendString(pseudoOther + " a mis fin à la session.");
+		this.chatInput.setEnabled(false);
+		this.chatInput.setFocusable(false);
+		this.sendMessage.setEnabled(false);
+		this.importFile.setEnabled(false);
+	}
+
+	
+	/**
+	 * Method used when the user closes the session. Set all attributes' references
+	 * to null, and call destroyAll() on the controller.
+	 */
 	public void destroyAll() {
 		if (this.c != null) {
 			this.c.destroyAll();
@@ -207,12 +260,13 @@ public class VueSession extends JPanel {
 		this.sendMessage = null;
 	}
 
+	
 	// ------------- PRIVATE CLASS TO WRAP TEXT -------------//
 
 	class WrapEditorKit extends StyledEditorKit {
-	
+
 		private static final long serialVersionUID = 1L;
-		
+
 		ViewFactory defaultFactory = new WrapColumnFactory();
 
 		public ViewFactory getViewFactory() {

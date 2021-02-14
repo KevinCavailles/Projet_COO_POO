@@ -2,7 +2,6 @@ package communication.udp;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
@@ -13,18 +12,23 @@ import observers.ObserverUserList;
 
 public class CommunicationUDP extends Thread {
 
-	// ****
-	protected static int PORT_SERVEUR = 3000;
-	// ****
-	protected static int PORT_CLIENT = 2000;
-
 	private UDPClient client;
 	private UDPServer server;
 	private int portServer;
 	private ArrayList<Integer> portOthers;
 	private ArrayList<Utilisateur> users = new ArrayList<Utilisateur>();
-	private ObserverUserList observer;
+	private ObserverUserList obsList;
 
+	/**
+	 * Create the object that will manage the userlist and contain a UDPClient and a
+	 * UDPServer. Since the applications will run on localhost, it needs to know
+	 * every UDPServer ports used in order to replicate a broadcast behaviour.
+	 * 
+	 * @param portClient 	The port number for the UDPClient
+	 * @param portServer 	The port number for the UDPServer
+	 * @param portsOther 	The port numbers for every other application's UDPServer
+	 * @throws IOException
+	 */
 	public CommunicationUDP(int portClient, int portServer, int[] portsOther) throws IOException {
 		this.portServer = portServer;
 		this.portOthers = this.getArrayListFromArray(portsOther);
@@ -33,14 +37,13 @@ public class CommunicationUDP extends Thread {
 		this.client = new UDPClient(portClient);
 	}
 
-	// ****
-	public CommunicationUDP() throws SocketException, UnknownHostException {
-		this.portServer = PORT_SERVEUR;
-		this.server = new UDPServer(portServer, this);
-		this.server.start();
-		this.client = new UDPClient(PORT_CLIENT);
-	}
-
+	/**
+	 * Create an ArrayList<Integer> from the int[] list of every servers' ports and
+	 * remove the port of this application UDPServer.
+	 * 
+	 * @param ports 	The UDPServer port numbers.
+	 * @return An ArrayList<Integer> without the port of this UDPServer.
+	 */
 	private ArrayList<Integer> getArrayListFromArray(int ports[]) {
 		ArrayList<Integer> tmp = new ArrayList<Integer>();
 		for (int port : ports) {
@@ -51,42 +54,83 @@ public class CommunicationUDP extends Thread {
 		return tmp;
 	}
 
-	public void setObserver(ObserverUserList obs) {
-		this.observer = obs;
+	/**
+	 * Set the observer to notify when the userList is updated.
+	 * 
+	 * @param obs 	The observer
+	 */
+	public void setObserver(ObserverUserList o) {
+		this.obsList = o;
 	}
 
-	// -------------- USER LIST UPDATE FUNCTION --------------//
+	// -------------- USER LIST UPDATE METHODS -------------- //
 
-	protected synchronized void addUser(String idClient, String pseudoClient, InetAddress ipClient, int port)
-			throws IOException {
-		users.add(new Utilisateur(idClient, pseudoClient, ipClient, port));
+	/**
+	 * Add a new user to the userlist and notify the observer.
+	 * 
+	 * @param idClient
+	 * @param pseudoClient
+	 * @param ipClient
+	 * @param port
+	 * @throws UnknownHostException
+	 */
+	protected synchronized void addUser(String idUser, String pseudoUser, InetAddress ipUser, int portTCPServer)
+			throws UnknownHostException {
+		users.add(new Utilisateur(idUser, pseudoUser, ipUser, portTCPServer));
 		this.sendUpdate();
 
 	}
 
-	protected synchronized void changePseudoUser(String idClient, String pseudoClient, InetAddress ipClient, int port) {
-		int index = getIndexFromID(idClient);
-		users.get(index).setPseudo(pseudoClient);
-		this.sendUpdate();
+	/**
+	 * Change the pseudo of an user and notify the observer if it exists in the
+	 * userlist. Do nothing otherwise.
+	 * 
+	 * @param idClient
+	 * @param pseudoClient
+	 * @param ipClient
+	 * @param port
+	 */
+	protected synchronized void changePseudoUser(String idUser, String pseudoUser, InetAddress ipUser,
+			int portTCPServer) {
+		int index = getIndexFromID(idUser);
+		if (index != -1) {
+			users.get(index).setPseudo(pseudoUser);
+			this.sendUpdate();
+		}
+
 	}
 
-	protected synchronized void removeUser(String idClient, String pseudoClient, InetAddress ipClient, int port) {
-		int index = getIndexFromID(idClient);
+	/**
+	 * Remove an user from the userlist and notify the observer if it exists in the
+	 * userlist. Do nothing otherwise.
+	 * 
+	 * @param idUser
+	 * @param pseudoUser
+	 * @param ipUser
+	 * @param portTCPServer
+	 */
+	protected synchronized void removeUser(String idUser, String pseudoUser, InetAddress ipUser, int portTCPServer) {
+		int index = getIndexFromID(idUser);
 		if (index != -1) {
 			users.remove(index);
+			this.sendUpdate();
 		}
-		this.sendUpdate();
+
 	}
 
-	public void removeAll() {
-		int oSize = users.size();
-		for (int i = 0; i < oSize; i++) {
-			users.remove(0);
-		}
+	public void removeAllUsers() {
+		this.users.clear();
 	}
 
-	// -------------- CHECKERS --------------//
+	// -------------- CHECKERS -------------- //
 
+	/**
+	 * Check if there is an user in the list that has the given id.
+	 * 
+	 * @param id 	The user's id.
+	 * @return True if the user is in the list 
+	 * false otherwise.
+	 */
 	protected boolean containsUserFromID(String id) {
 		for (Utilisateur u : users) {
 			if (u.getId().equals(id)) {
@@ -96,6 +140,13 @@ public class CommunicationUDP extends Thread {
 		return false;
 	}
 
+	/**
+	 * Check if there is an user in the list that has the given pseudo.
+	 * 
+	 * @param pseudo 	The user's pseudo.
+	 * @return True if the user is in the list 
+	 * false otherwise.
+	 */
 	public boolean containsUserFromPseudo(String pseudo) {
 		for (Utilisateur u : users) {
 			if (u.getPseudo().toLowerCase().equals(pseudo)) {
@@ -106,8 +157,15 @@ public class CommunicationUDP extends Thread {
 		return false;
 	}
 
-	// -------------- GETTERS --------------//
+	// -------------- GETTERS -------------- //
 
+	/**
+	 * Return the user with the given pseudo if it exists in the list.
+	 * 
+	 * @param pseudo 	The user's pseudo.
+	 * @return The user if it exists in the list. 
+	 * null otherwise.
+	 */
 	public Utilisateur getUserFromPseudo(String pseudo) {
 		for (int i = 0; i < users.size(); i++) {
 			if (users.get(i).getPseudo().equals(pseudo)) {
@@ -117,6 +175,13 @@ public class CommunicationUDP extends Thread {
 		return null;
 	}
 
+	/**
+	 * Return the index of the user with the given id if it exists in the list.
+	 * 
+	 * @param id 	The user's id.
+	 * @return The index if the user exists in the list. 
+	 * null otherwise
+	 */
 	private int getIndexFromID(String id) {
 		for (int i = 0; i < users.size(); i++) {
 			if (users.get(i).getId().equals(id)) {
@@ -126,81 +191,105 @@ public class CommunicationUDP extends Thread {
 		return -1;
 	}
 
-	// -------------- SEND MESSAGES --------------//
+	// -------------- SEND MESSAGES METHODS -------------- //
 
+	/**
+	 * Send a message indicating this application's user is connected to every
+	 * UDPServer.
+	 * 
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 */
 	public void sendMessageConnecte() throws UnknownHostException, IOException {
-		for (int port : this.portOthers) {
-			try {
-				this.client.sendMessageUDP_local(new MessageSysteme(Message.TypeMessage.JE_SUIS_CONNECTE), port,
-						InetAddress.getLocalHost());
-			} catch (MauvaisTypeMessageException e) {
-				/* Si ça marche pas essayer là */}
+
+		try {
+			Message msgOut = new MessageSysteme(Message.TypeMessage.JE_SUIS_CONNECTE);
+			for (int port : this.portOthers) {
+
+				this.client.sendMessageUDP_local(msgOut, port);
+			}
+		} catch (MauvaisTypeMessageException e) {
+			e.printStackTrace();
 		}
 	}
 
-	// Send the message "add,id,pseudo" to localhost on all the ports in
-	// "portOthers"
-	// This allows the receivers' agent (portOthers) to create or modify an entry
-	// with the
-	// data of this agent
-	// Typically used to notify of a name change
+	/**
+	 * Send a message containing this application's user's data to every UDPServer.
+	 * This method is used to first add this user in the userlist or update this
+	 * user's pseudo.
+	 * 
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 */
 	public void sendMessageInfoPseudo() throws UnknownHostException, IOException {
 
 		Utilisateur self = Utilisateur.getSelf();
 
 		try {
-			Message msgOut = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, self.getPseudo(), self.getId(), self.getPort());
+			Message msgOut = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, self.getPseudo(), self.getId(),
+					self.getPort());
 			for (int port : this.portOthers) {
-				this.client.sendMessageUDP_local(msgOut, port, InetAddress.getLocalHost());
+				this.client.sendMessageUDP_local(msgOut, port);
 			}
-		} catch (Exception e) {
+		} catch (MauvaisTypeMessageException e) {
 			e.printStackTrace();
 		}
 
 	}
 
-	// Same, but on only one port
-	// Typically used to give your current name and id to a newly arrived host
+	/**
+	 * Send a message containing this application's user's data to one user. This
+	 * method is used to answer back when receiving a message with the type
+	 * "JE_SUIS_CONNECTE"
+	 * 
+	 * @param portOther 	The port on which the other user's UDPServer is listening
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 */
 	public void sendMessageInfoPseudo(int portOther) throws UnknownHostException, IOException {
 
 		Utilisateur self = Utilisateur.getSelf();
 		try {
 			Message msgOut = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, self.getPseudo(), self.getId(),
 					self.getPort());
-			this.client.sendMessageUDP_local(msgOut, portOther, InetAddress.getLocalHost());
+			this.client.sendMessageUDP_local(msgOut, portOther);
 		} catch (MauvaisTypeMessageException e) {
 			e.printStackTrace();
 		}
 	}
 
-	// Send the message "del,id,pseudo" to localhost on all the ports in
-	// "portOthers"
-	// This allows the receivers' agent (portOthers) to delete the entry
-	// corresponding to this agent
+	/**
+	 * Send a message indicating this application's user is disconnected to every
+	 * UDPServer.
+	 * 
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 */
 	public void sendMessageDelete() throws UnknownHostException, IOException {
 		Utilisateur self = Utilisateur.getSelf();
 		try {
-			
-			Message msgOut = new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, self.getPseudo(), self.getId(), self.getPort());
+
+			Message msgOut = new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, self.getPseudo(), self.getId(),
+					self.getPort());
 			for (int port : this.portOthers) {
-				this.client.sendMessageUDP_local(msgOut, port, InetAddress.getLocalHost());
+				this.client.sendMessageUDP_local(msgOut, port);
 			}
-			
+
 		} catch (MauvaisTypeMessageException e) {
-
+			e.printStackTrace();
 		}
 	}
 	
 	
+	// -------------- OTHERS -------------- //
+
+	/**
+	 * Notify the observer with the updated list
+	 */
 	private void sendUpdate() {
-		if(this.observer != null) {
-			this.observer.updateList(this, users);
+		if (this.obsList != null) {
+			this.obsList.updateList(this, users);
 		}
-	}
-
-	public void destroyAll() {
-		this.client.destroyAll();
-		this.server.interrupt();
 	}
 
 }
