@@ -15,16 +15,28 @@ public class UDPClient {
 	private DatagramSocket sockUDP;
 	//private InetAddress broadcast;
 	
+	
+	/**
+	 * Create an UDP client on the specified port. It will be used to notify the
+	 * other users of this application's user state (Connected/Disconnected/Pseudo
+	 * changed).
+	 * 
+	 * @param port
+	 * @throws SocketException
+	 * @throws UnknownHostException
+	 */
 	public UDPClient(int port) throws SocketException, UnknownHostException {
 		this.sockUDP = new DatagramSocket(port);
-		
-		//InetAddress localHost = InetAddress.getLocalHost();
-		//NetworkInterface networkInterface = NetworkInterface.getByInetAddress(localHost);
-		//this.broadcast = networkInterface.getInterfaceAddresses().get(0).getBroadcast();
 	}
 	
 	
-	//Send a message casted as string to the specified port on localhost
+	/**
+	 * Send a message to the specified port on localhost.
+	 * 
+	 * @param message
+	 * @param port
+	 * @throws IOException
+	 */
 	protected void sendMessageUDP_local(Message message, int port, InetAddress clientAddress) throws IOException {
 		String messageString= message.toString();
 		DatagramPacket outpacket = new DatagramPacket(messageString.getBytes(), messageString.length(), clientAddress, port);
@@ -32,10 +44,19 @@ public class UDPClient {
 		
 	}
 	
-//	protected void sendMessageUDP_broadcast(String message, int port) throws IOException{
-//		String messageString=message.toString();
-//		DatagramPacket outpacket = new DatagramPacket(messageString.getBytes(), messageString.length(), this.broadcast, port);
-//		this.sockUDP.send(outpacket);
-//	}
+	/**
+	 * Send a message to the given address on the specified port.
+	 * 
+	 * @param message
+	 * @param port
+	 * @param clientAddress
+	 * @throws IOException
+	 */
+	private void sendMessageUDP(Message message, int port, InetAddress clientAddress) throws IOException {
+		String messageString = message.toString();
+		DatagramPacket outpacket = new DatagramPacket(messageString.getBytes(), messageString.length(), clientAddress,
+				port);
+		this.sockUDP.send(outpacket);
+	}
 	
 }

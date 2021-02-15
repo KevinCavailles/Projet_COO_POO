@@ -39,13 +39,8 @@ public class CommunicationUDP extends Thread {
 		return tmp;
 	}
 	
-	public void setObserver (Observer obs) {
-		this.observer=obs;
-	}
 	
-	public Observer getObserver () {
-		return this.observer;
-	}
+	// ----- CHECKERS ----- //
 	
 	protected boolean containsUserFromID(String id) {
 		for(Utilisateur u : users) {
@@ -66,6 +61,9 @@ public class CommunicationUDP extends Thread {
 		
 		return false;
 	}
+	
+	
+	// ----- GETTERS ----- //
 	
 	public int getPortFromPseudo(String pseudo) {
 		for(int i=0; i < users.size() ; i++) {
@@ -95,13 +93,30 @@ public class CommunicationUDP extends Thread {
 		return null;
 	}
 	
+	public Observer getObserver () {
+		return this.observer;
+	}
+	
+	
+	// ----- SETTERS ----- //
+	
+	public void setObserver (Observer obs) {
+		this.observer=obs;
+	}
+	
+	
+	
+	
+	// ----- USER LIST MANAGEMENT ----- //
+	
+	//Prints a html table containing the pseudo of all active local users
 	 public void printActiveUsersUDP(PrintWriter out) {
 		    for (Utilisateur uIn : users) {
 		    	out.println("<TH> " + uIn.getPseudo() + ",</TH>");
 		    }
 	    }
 	
-	
+	//Add an user to the list of active local users
 	protected synchronized void addUser(String idClient, String pseudoClient, InetAddress ipClient, int port) throws IOException {
 		users.add(new Utilisateur(idClient, pseudoClient, ipClient, port));
 		try {
@@ -111,6 +126,7 @@ public class CommunicationUDP extends Thread {
 		}		
 	}
 	
+	//Change the pseudo of an user already in the active local users list
 	protected synchronized void changePseudoUser(String idClient, String pseudoClient, InetAddress ipClient, int port) {
 		int index = getIndexFromID(idClient);
 		users.get(index).setPseudo(pseudoClient);
@@ -121,7 +137,7 @@ public class CommunicationUDP extends Thread {
 		}
 	}
 
-	
+	//Remove an user from the active local users list
 	protected synchronized void removeUser(String idClient, String pseudoClient,InetAddress ipClient, int port) {
 		int index = getIndexFromID(idClient);
 		if( index != -1) {
@@ -134,12 +150,16 @@ public class CommunicationUDP extends Thread {
 		}
 	}
 	
+	//Remove all users from the active local users list
 	public void removeAll(){
 		int oSize = users.size();
 		for(int i=0; i<oSize;i++) {
 			users.remove(0);
 		}
 	}
+	
+	
+	// ----- SENDING MESSAGES ----- //
 	
 	
 	// Send the message "add,id,pseudo" to localhost on all the ports in
@@ -177,7 +197,7 @@ public class CommunicationUDP extends Thread {
 	}
 
 	
-	//Broadcast a given message on the local network (here podelized by ports)
+	//Broadcast a given message on the local network (here modelized by ports)
 	public void sendMessage(Message m) {
 		try {
 			for(int port : this.portOthers) {

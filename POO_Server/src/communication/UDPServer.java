@@ -16,6 +16,15 @@ public class UDPServer extends Thread {
 	private CommunicationUDP commUDP;
 	private byte[] buffer;
 
+	
+	/**
+	 * Create an UDP Server on the specified port. It will be used to read the
+	 * other users states (Connected/Disconnected/Pseudo).
+	 * 
+	 * @param port
+	 * @param commUDP
+	 * @throws SocketException
+	 */
 	public UDPServer(int port, CommunicationUDP commUDP) throws SocketException {
 		this.commUDP = commUDP;
 		this.sockUDP = new DatagramSocket(port);

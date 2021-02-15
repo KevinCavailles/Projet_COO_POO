@@ -21,7 +21,6 @@ import messages.*;
  */
 @WebServlet("/ServletPresence")
 
-//Faire un publish (get) séparé en utilisant les cookies pour stocker les modifications : pose problème au niveau de la synchro des pseudos
 
 public class ServletPresence extends HttpServlet implements Observer {
 	private static final long serialVersionUID = 1L;
@@ -135,7 +134,7 @@ public class ServletPresence extends HttpServlet implements Observer {
 	    out.println( "</HTML>" );
     }
     
-    //Affiche un message d'erreur en cas de requête invalide
+    //Affiche un message d'erreur en cas d'id inconnue
     private void printErrorUnkwownUser(PrintWriter out) {
     	out.println( "<HTML>" );
 	    out.println( "<HEAD>");
