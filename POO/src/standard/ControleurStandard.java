@@ -116,7 +116,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 						}
 
 					} catch (IOException e1) {
-						e1.printStackTrace();
+						vue.displayJOptionResponse("refusee");
 					}
 				}
 

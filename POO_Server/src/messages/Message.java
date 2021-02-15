@@ -6,48 +6,101 @@ import java.time.format.DateTimeFormatter;
 
 public abstract class Message implements Serializable {
 
-	public enum TypeMessage {JE_SUIS_CONNECTE, JE_SUIS_DECONNECTE, INFO_PSEUDO, TEXTE, IMAGE, FICHIER, MESSAGE_NUL, FICHIER_INIT, FICHIER_ANSWER}
+	public enum TypeMessage {JE_SUIS_CONNECTE, JE_SUIS_DECONNECTE, INFO_PSEUDO, TEXTE, IMAGE, FICHIER, FICHIER_INIT, FICHIER_ANSWER}
 	protected TypeMessage type;
 	private String dateMessage;
 	private String sender;
 	private static final long serialVersionUID = 1L;
 	
 	
+	
+	// ------- GETTERS ------ //
+	
+	/**
+	 * Returns the current date and time as a string using DateTimeFormatter and LocalDateTime
+	 * 
+	 * @return date and time as a String
+	 */
 	public static String getDateAndTime() {
 		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 		LocalDateTime now = LocalDateTime.now();
 		return dtf.format(now);
 	}
 	
-	
+	/**
+	 * Returns the type of the message
+	 * 
+	 * @return message type as TypeMessage
+	 */
 	public TypeMessage getTypeMessage() {
 		return this.type;
 	}
 	
-	public void setDateMessage(String dateMessage) {
-		this.dateMessage = dateMessage;
-	}
-	
+	/**
+	 * Returns the date and time to which the message was timestamped
+	 * 
+	 * @return date and time of timestamp as String
+	 */
 	public String getDateMessage() {
 		return this.dateMessage;
 	}
 	
+	/**
+	 * Returns the sender of the message (used in the database)
+	 * 
+	 * @return sender of message as String
+	 */
 	public String getSender() {
 		return this.sender ;
 	}
 	
-	public void setSender(String sender) {
-		this.sender = sender;
+
+	
+	// ------ SETTERS ------ //
+	
+	/**
+	 * Set the date of the message to a specific timestamp
+	 * 
+	 * @param timestamp as (formatted) String
+	 */
+	public void setDateMessage(String dateMessage) {
+		this.dateMessage = dateMessage;
 	}
 	
+	/**
+	 * Set the sender of the message to a specified string
+	 * 
+	 * @param sender pseudo as String
+	 */
+	public void setSender(String sender) {
+		this.sender = sender;
+	}	
 	
+	
+	// ----- MESSAGE-STRING CONVERSION METHODS -------//
 
+	/**
+	 * Returns a string representing the formatted list of attributes
+	 * 
+	 *@return attributes as a String
+	 */
 	protected abstract String attributsToString();
 
+	/**
+	 * Returns the message as a formatted string
+	 * 
+	 *@return message as a String
+	 */
 	public String toString() {
 		return this.type+"###"+this.attributsToString();
 	}	
 
+	/**
+	 * Static method. Returns a message obtainer by parsing a given string
+	 * 
+	 *@param String representing a message
+	 *@return Message
+	 */
 	public static Message stringToMessage(String messageString) {
 		try {
 			String[] parts = messageString.split("###");
@@ -72,23 +125,6 @@ public abstract class Message implements Serializable {
 			}
 		} catch (MauvaisTypeMessageException e) {}
 			return null;
-	}
-
-	//tests ici
-	public static void main(String[] args) throws MauvaisTypeMessageException {		
-		Message m1 = new MessageSysteme(TypeMessage.JE_SUIS_CONNECTE);
-		Message m2 = new MessageSysteme(TypeMessage.JE_SUIS_DECONNECTE,"aker", "man", 5000);
-		Message m3 = new MessageSysteme(TypeMessage.INFO_PSEUDO, "pseudo156434518", "id236", 1500);
-		Message m4 = new MessageTexte(TypeMessage.TEXTE, "blablabla");
-		Message m5 = new MessageFichier(TypeMessage.FICHIER, "truc", ".pdf");
-		
-		
-		System.out.println(Message.stringToMessage(m1.toString()));
-		System.out.println(Message.stringToMessage(m2.toString()));
-		System.out.println(Message.stringToMessage(m3.toString()));
-		System.out.println(Message.stringToMessage(m4.toString()));
-		System.out.println(Message.stringToMessage(m5.toString()));
-		
 	}
 
 }

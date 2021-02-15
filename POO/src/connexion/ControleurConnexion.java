@@ -39,7 +39,7 @@ public class ControleurConnexion implements ActionListener{
 		this.sqlManager = new SQLiteManager(0);
 		this.vueStd = null;
 		
-		int[] portServer = {2209, 2309, 2409, 2509};
+		int[] portServer = {2209, 2309, 2409, 2509, 3334};
 		try {
 			switch(numtest) {
 			case 0 : 

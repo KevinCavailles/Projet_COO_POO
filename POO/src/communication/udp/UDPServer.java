@@ -34,7 +34,6 @@ class UDPServer extends Thread {
 	@Override
 	public void run() {
 		while (this.running) {
-
 			try {
 				
 				//When a datagram is received, converts its data in a Message
@@ -42,7 +41,7 @@ class UDPServer extends Thread {
 				this.sockUDP.receive(inPacket);
 				String msgString = new String(inPacket.getData(), 0, inPacket.getLength());
 				Message msg = Message.stringToMessage(msgString);
-
+				
 				//Depending on the type of the message
 				switch (msg.getTypeMessage()) {
 				case JE_SUIS_CONNECTE:

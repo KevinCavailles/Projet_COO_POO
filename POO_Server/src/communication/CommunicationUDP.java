@@ -108,7 +108,6 @@ public class CommunicationUDP extends Thread {
 			Message message = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, idClient, pseudoClient, port);
 			observer.update(this, message);
 		} catch (MauvaisTypeMessageException e) {
-			e.printStackTrace();
 		}		
 	}
 	
@@ -119,7 +118,6 @@ public class CommunicationUDP extends Thread {
 			Message message = new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, idClient, pseudoClient, port);
 			observer.update(this, message);
 		} catch (MauvaisTypeMessageException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -133,7 +131,6 @@ public class CommunicationUDP extends Thread {
 			Message message = new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE, pseudoClient,  idClient, port);
 			observer.update(this, message);
 		} catch (MauvaisTypeMessageException e) {
-			e.printStackTrace();
 		}
 	}
 	
@@ -165,7 +162,6 @@ public class CommunicationUDP extends Thread {
 				this.client.sendMessageUDP_local(msout, port, InetAddress.getLocalHost());
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 	
@@ -188,8 +184,6 @@ public class CommunicationUDP extends Thread {
 				this.client.sendMessageUDP_local(m, port, InetAddress.getLocalHost());
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 	
@@ -198,8 +192,6 @@ public class CommunicationUDP extends Thread {
 		try {
 			this.client.sendMessageUDP_local(m, port, InetAddress.getLocalHost());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 

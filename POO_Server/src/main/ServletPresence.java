@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -33,20 +32,20 @@ public class ServletPresence extends HttpServlet implements Observer {
 	
     public ServletPresence() {
         try {
-			comUDP = new CommunicationUDP(3333, 3334, new int[] {2209, 2309, 2409, 3334});
+			comUDP = new CommunicationUDP(3333, 3334, new int[] {2209, 2309, 2409, 2509, 3334});
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
         comUDP.setObserver(this);
         remoteUsers = new ArrayList<Utilisateur>();
         try {
 			Utilisateur.setSelf("serv_p", "Serveur de presence", "localhost", 3334);
 		} catch (UnknownHostException e) {
-			e.printStackTrace();
 		}
     }
     
+    
+    // ----- REMOTE USER LIST MANAGEMENT ----- //
+
     private int getIndexByID(String id) {
     	for(int i=0; i < remoteUsers.size() ; i++) {
 			if(remoteUsers.get(i).getId().equals(id) ) {
@@ -65,7 +64,8 @@ public class ServletPresence extends HttpServlet implements Observer {
     	return false;
     }
     
-    //Fonctions d'affichage
+    
+    // ----- HTML PRINT METHODS ----- //
     
   //Affiche la liste des utilisateurs actifs
     private void printActiveUsers(PrintWriter out) {
@@ -103,6 +103,7 @@ public class ServletPresence extends HttpServlet implements Observer {
 	    out.println( "<H3>Se connecter : ?type=POST&id=[votre id]&pseudo=[pseudo voulu]&port=[port utilisé] </H3>" );
 	    out.println( "<H3>Se déconnecter : ?type=DELETE&id=[votre id] </H3>" );
 	    out.println( "<H3>Changer de pseudo : ?type=PUT&id=[votre id]&pseudo=[pseudo voulu] </H3>" );
+	    out.println( "<H3>Rafraîchir la liste des utilisateurs : ?type=GET" );
 	    out.println( "</BODY>" );
 	    out.println( "</HTML>" );
     }
@@ -148,7 +149,9 @@ public class ServletPresence extends HttpServlet implements Observer {
     }
     
     
-    //Informe de la modification de la liste tous les utilisateurs internes et externes
+    // ----- NOTIFY METHOD ----- //
+    
+    //Informe de la modification de la liste tous les utilisateurs internes et externes : appelée automatiquement à chaque modification de la liste
     private void snotify(MessageSysteme message, Utilisateur user) {
     	if (remoteUsers.contains(user)) {
     		//diffuse le message localement, envoie la nouvelle liste des utilisateurs aux utilisateurs externes SAUF L'EXPEDITEUR
@@ -167,6 +170,10 @@ public class ServletPresence extends HttpServlet implements Observer {
     	}
     }
 
+    
+    
+    // ----- HTTP METHODS ----- //
+    
   // susbribe/unsubscribe : Permet a un utilisateur externe de s'ajouter/s'enlever à la liste des utilisateurs externes : au tout début de l'application
 	//Note : le serveur agit comme un proxy pour le TCP et remplace le port de l'utilisateur par le sien
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -202,8 +209,6 @@ public class ServletPresence extends HttpServlet implements Observer {
 				printActiveUsersOnly(out);
 			}
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		out.close();
 	}
@@ -212,13 +217,11 @@ public class ServletPresence extends HttpServlet implements Observer {
 		String id = request.getParameter("id");
 		int index = getIndexByID(id);
     	Utilisateur user = remoteUsers.get(index);
-    	remoteUsers.remove(index);
     	try {
-			snotify(new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE,"", id, -1), user);
+			snotify(new MessageSysteme(Message.TypeMessage.JE_SUIS_DECONNECTE,"", id, 3334), user);
 		} catch (MauvaisTypeMessageException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
+    	remoteUsers.remove(index);
     	response.setContentType( "text/html" );
 	    PrintWriter out = response.getWriter();
 	    printHomePage(out);
@@ -245,14 +248,13 @@ public class ServletPresence extends HttpServlet implements Observer {
 			try {
 				snotify(new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, pseudo, id, 3334), user);
 			} catch (MauvaisTypeMessageException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 			printActiveUsersOnly(out);
 		}
 		out.close();
 	}
 	
+	//Méthode générale, embranche vers l'une au l'autre des méthodes HTTP (à défaut d'une "vraie" interface)
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
 
 		try {
@@ -270,6 +272,12 @@ public class ServletPresence extends HttpServlet implements Observer {
 				case "PUT" :
 					doPut(request, response);
 					break;
+					
+				case "GET" :
+					//Met à jour la liste des utilisateurs affichée
+					PrintWriter out1 = response.getWriter();
+				    printActiveUsersOnly(out1);
+				    out1.close();
 					
 				//génère une jolie page
 				default :
@@ -289,6 +297,7 @@ public class ServletPresence extends HttpServlet implements Observer {
 		}
 	}
 	
+	// ----- OBSERVER METHOD ----- //
 	
 	@Override
 	//Note : on part du principe que pour les communications TCP et autres, le serveur agira comme un proxy et donc que les 
@@ -307,7 +316,6 @@ public class ServletPresence extends HttpServlet implements Observer {
 	    		try {
 					comUDP.sendMessage(new MessageSysteme(Message.TypeMessage.INFO_PSEUDO, u.getPseudo(), u.getId(), u.getPort()), port);
 				} catch (MauvaisTypeMessageException e) {
-					e.printStackTrace();
 				}
 	    	}
 		}
