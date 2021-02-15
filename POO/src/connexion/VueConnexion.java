@@ -73,7 +73,7 @@ public class VueConnexion extends Vue {
 		this.inputUsername = new JTextField();
 		this.inputUsername.setPreferredSize(new Dimension(100, 50));
 		
-		this.labelUsername = new JLabel("Nom d'utilisateur");	
+		this.labelUsername = new JLabel("Nom d'utilisateur :");	
 		this.labelUsername.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 		
 		this.inputPassword = new JPasswordField();

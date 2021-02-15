@@ -108,7 +108,7 @@ public class ControleurConnexion implements ActionListener{
 				inputOK=false;
 			}
 			else {
-				this.vue.setConnexionInfo("Identifiant ou mot de passe invalide, veuillez réessayer");
+				this.vue.setConnexionInfo("Nom d'utilisateur ou mot de passe invalide, veuillez réessayer");
 				this.vue.resetPasswordField();
 			}
 			

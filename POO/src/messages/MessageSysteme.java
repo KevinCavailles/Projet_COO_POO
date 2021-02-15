@@ -1,6 +1,5 @@
 package messages;
 
-import java.io.IOException;
 
 public class MessageSysteme extends Message {
 	

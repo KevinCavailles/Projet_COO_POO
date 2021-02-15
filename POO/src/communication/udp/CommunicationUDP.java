@@ -149,7 +149,7 @@ public class CommunicationUDP extends Thread {
 	 */
 	public boolean containsUserFromPseudo(String pseudo) {
 		for (Utilisateur u : users) {
-			if (u.getPseudo().toLowerCase().equals(pseudo)) {
+			if (u.getPseudo().toLowerCase().equals(pseudo.toLowerCase())) {
 				return true;
 			}
 		}

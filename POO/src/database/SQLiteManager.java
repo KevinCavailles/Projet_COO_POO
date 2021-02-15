@@ -1,5 +1,12 @@
 package database;
 
+import java.awt.Dimension;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -17,6 +24,10 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
 
 import main.Utilisateur;
 import messages.MauvaisTypeMessageException;
@@ -198,7 +209,9 @@ public class SQLiteManager {
 		prepStmt.setString(5, extension);
 
 		int nbRows = prepStmt.executeUpdate();
-
+		
+		prepStmt.close();
+		
 		return nbRows;
 	}
 
@@ -241,6 +254,8 @@ public class SQLiteManager {
 		prepStmt.setBytes(6, ivConversation);
 
 		prepStmt.executeUpdate();
+		
+		prepStmt.close();
 	}
 
 	
@@ -336,7 +351,9 @@ public class SQLiteManager {
 			}
 
 		}
-
+		
+		res.close();
+		prepStmt.close();
 		this.closeConnection();
 
 		return messages;
@@ -358,10 +375,16 @@ public class SQLiteManager {
 		prepStmt.setString(1, username);
 		ResultSet res = prepStmt.executeQuery();
 
+		int ret = -1;
+		
 		if (res.next()) {
-			return res.getInt("id");
+			 ret = res.getInt("id");
 		}
-		return -1;
+		
+		res.close();
+		prepStmt.close();
+		
+		return ret;
 
 	}
 
@@ -384,10 +407,17 @@ public class SQLiteManager {
 		prepStmt.setInt(2, idReceiver);
 		ResultSet res = prepStmt.executeQuery();
 
+		
+		int ret = -1;
+		
 		if (res.next()) {
-			return res.getInt("id_conversation");
+			ret = res.getInt("id_conversation");
 		}
-		return -1;
+		
+		res.close();
+		prepStmt.close();
+		
+		return ret;
 	}
 
 	
@@ -407,11 +437,16 @@ public class SQLiteManager {
 		prepStmt.setInt(1, idConversation);
 		ResultSet res = prepStmt.executeQuery();
 
+		IvParameterSpec ret = null;
+		
 		if (res.next()) {
-			return new IvParameterSpec(res.getBytes("iv_conversation"));
+			ret = new IvParameterSpec(res.getBytes("iv_conversation"));
 		}
+		
+		res.close();
+		prepStmt.close();
 
-		return null;
+		return ret;
 	}
 
 	
@@ -431,10 +466,16 @@ public class SQLiteManager {
 
 		ResultSet res = prepStmt.executeQuery();
 
+		int ret = -1;
+				
 		if (res.next()) {
-			return res.getInt("id_type");
+			ret = res.getInt("id_type");
 		}
-		return -1;
+		
+		res.close();
+		prepStmt.close();
+		
+		return ret;
 	}
 
 	
@@ -454,11 +495,15 @@ public class SQLiteManager {
 
 		ResultSet res = prepStmt.executeQuery();
 
+		String ret = "";
 		if (res.next()) {
-			return res.getString("label");
+			ret = res.getString("label");
 		}
 
-		return "";
+		res.close();
+		prepStmt.close();
+		
+		return ret;
 
 	}
 
@@ -570,7 +615,7 @@ public class SQLiteManager {
 	 * @param username
 	 * @param password
 	 */
-	public void createNewUserEncrypt(String username, String password) {
+	public String createNewUserEncrypt(String username, String password) {
 
 		String algo = SQLiteEncryption.encryptAlgorithm;
 
@@ -626,12 +671,18 @@ public class SQLiteManager {
 
 		try {
 			prepStmt.executeUpdate();
-			System.out.println("Utilisateur crée");
+			
+			prepStmt.close();
+			this.closeConnection();
+			
+			return "Utilisateur crée\n";
 		} catch (SQLException e) {
-			System.out.println("Nom d'utilisateur déjà pris");
+			this.closeConnection();
+			
+			return "Nom d'utilisateur déjà pris\n";
+				
 		}
 
-		this.closeConnection();
 
 	}
 
@@ -692,6 +743,8 @@ public class SQLiteManager {
 
 		byte[] passwordHash = SQLiteEncryption.hash(password, passwordSalt);
 
+		res.close();
+		prepStmt.close();
 		this.closeConnection();
 
 		boolean checkHash = this.checkHashPwd(passwordHash, encryptedPasswordHash, dbDataKey, iv);
@@ -743,16 +796,68 @@ public class SQLiteManager {
 
 	// Main to create 20 users in the database with the given number
 	public static void main(String[] args) {
-		String[] hardcodedNames = { "Olivia", "Liam", "Benjamin", "Sophia", "Charlotte", "Noah", "Elijah", "Isabella",
-				"Oliver", "Emma", "William", "Amelia", "Evelyn", "James", "Mia", "Ava", "Lucas", "Mason", "Ethan",
-				"Harper" };
-
-		String pwdPrefix = "aze1$";
-
+		
 		SQLiteManager sqlManager = new SQLiteManager(0);
+		
+		JTextArea text = new JTextArea();
+		text.setEditable(false);
+		text.setPreferredSize(new Dimension(200,500));
+		
+		JScrollPane scroll = new JScrollPane(text);
+	
+		JFrame frame = new JFrame("création d'utilisateur");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.add(scroll);
+		frame.setVisible(true);
+		frame.pack();
+		
+		
+		File credentials = new File("../credentials.txt");
+		if(!credentials.exists()) {
+			try {
+				credentials.createNewFile();
+				BufferedWriter writer = new BufferedWriter(new FileWriter(credentials));
+				writer.write("//Ce fichier est utilisé lors de la création de nouveaux utilisateurs\n"
+						+ "//Un utilisateur est défini par un nom d'utilisateur unique (sensible à la casse) et un mot de passe.\n"
+						+ "//Le format à utiliser pour que l'application fonctionne est le suivant :\n"
+						+ "//[nom_utilisateur]:[mot_de_passe].\n"
+						+ "//Une seul déclaration d'utilisateur par ligne.\n"
+						+ "//Afin d'éviter tout problème, chaque ligne qui n'est pas une déclaration d'utilisateur doit commencer par \"//\" \n"
+						+ "//\n"
+						+ "//LISTE DES UTILISATEURS A CREER :\n"
+						+ "//\n");
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(credentials));
+			String line = reader.readLine();
+			while(line != null){
+				line = line.trim();
+				
+				if(line.charAt(0) != '/' && line.charAt(0) != '\n') {
+					
+					String[] data = line.split(":");
+					String username = data[0];
+					String pwd = data[1];
+					String res = sqlManager.createNewUserEncrypt(username, pwd);
+					text.append(res);
+					
+				}
+				
+				line = reader.readLine();
+				
+			}
+			
+			reader.close();	
+			
+			text.append("\nFini !\n");
+		} catch (IOException e) {
 
-		for (int i = 0; i < hardcodedNames.length; i++) {
-			sqlManager.createNewUserEncrypt(hardcodedNames[i] + i, pwdPrefix + hardcodedNames[i].charAt(0) + i);
+			e.printStackTrace();
 		}
 
 	}
