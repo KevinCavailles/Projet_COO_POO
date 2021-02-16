@@ -51,10 +51,23 @@ public class VueStandard extends Vue {
 	private ArrayList<VueSession> sessions;
 	private DefaultListModel<String> userList = new DefaultListModel<String>();
 
-	public VueStandard(String title, CommunicationUDP commUDP, int portServerTCP, SQLiteManager sqlManager, VueConnexion vueConnexion) throws IOException {
+	/**
+	 * Create the main frame of the application.
+	 * 
+	 * @param title
+	 * @param commUDP
+	 * @param portServerTCP
+	 * @param sqlManager
+	 * @param vueConnexion
+	 * @throws IOException
+	 */
+	public VueStandard(String title, CommunicationUDP commUDP, int portServerTCP, SQLiteManager sqlManager,
+			VueConnexion vueConnexion) throws IOException {
 		super(title);
 
+		//An array to keep tracks of the tabbed pane's close buttons
 		this.tabButtons = new ArrayList<JButton>();
+		//An array to keep tracks of the sessions' view
 		this.sessions = new ArrayList<VueSession>();
 		this.c = new ControleurStandard(this, commUDP, portServerTCP, sqlManager, vueConnexion);
 		this.c.init();
@@ -63,12 +76,13 @@ public class VueStandard extends Vue {
 
 		JPanel left = new JPanel(new BorderLayout());
 
+		// -----------Tabbed Pane for the session's panels -----------//
 		this.zoneSessions = new JTabbedPane();
 		this.zoneSessions.setTabPlacement(JTabbedPane.BOTTOM);
 
 		this.zoneSessions.setPreferredSize(new Dimension(600, 600));
 
-		// --------Panel haut pseudo--------//
+		// --------Panel up left pseudo--------//
 		JPanel self = new JPanel(new FlowLayout());
 
 		this.pseudoSelf = new JTextField(Utilisateur.getSelf().getPseudo());
@@ -101,7 +115,7 @@ public class VueStandard extends Vue {
 			}
 		});
 
-		// --------Panel milieu liste utilisateurs--------//
+		// --------Panel mid left userlist--------//
 		this.activeUsersList = new JList<String>(this.userList);
 		this.activeUsersList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		this.activeUsersList.setLayoutOrientation(JList.VERTICAL);
@@ -116,19 +130,19 @@ public class VueStandard extends Vue {
 		listScroller.setBorder(BorderFactory.createCompoundBorder(
 				BorderFactory.createTitledBorder("Utilisateurs Actifs"), BorderFactory.createEmptyBorder(5, 2, 2, 2)));
 
-		// --------Panel bas deconnexion--------//
+		// --------Panel down left log off--------//
 		JPanel deconnexion = new JPanel(new GridLayout(1, 2));
 
 		this.seDeconnecter = new JButton("Se Déconnecter");
 		this.seDeconnecter.addActionListener(this.c);
 		deconnexion.add(this.seDeconnecter);
-		
-		if(Utilisateur.getSelf().getId() == "admin") {
+
+		if (Utilisateur.getSelf().getId() == "admin") {
 			JButton addNewUser = new JButton("Ajouter un nouvel utilisateur");
 			deconnexion.add(addNewUser);
 		}
 
-		// --------Ajout à la vue--------//
+		// --------Add the panels to the frame--------//
 		left.add(self, BorderLayout.PAGE_START);
 		left.add(listScroller, BorderLayout.CENTER);
 		left.add(deconnexion, BorderLayout.PAGE_END);
@@ -186,36 +200,73 @@ public class VueStandard extends Vue {
 
 	// ------------ SETTERS -------------//
 
+	
+	/**
+	 * Set the list of active users to be displayed on the view. First remove the
+	 * old list.
+	 * 
+	 * @param users 	The list of active users.
+	 */
 	protected void setActiveUsersList(ArrayList<String> users) {
 		this.removeAllUsers();
 		this.userList.addAll(users);
 	}
 
+	
+	/**
+	 * Set the pseudo displayed on the view with the given pseudo.
+	 * 
+	 * @param pseudo
+	 */
 	protected void setDisplayedPseudo(String pseudo) {
 		this.pseudoSelf.setText(pseudo);
 	}
+
 	
+	/**
+	 * Set this application's user pseudo.
+	 */
 	public void setPseudoSelf() {
 		this.setDisplayedPseudo(Utilisateur.getSelf().getPseudo());
 	}
 
+	
 	// ------------ JOPTIONS -------------//
 
+	/**
+	 * Display the dialog box asking confirmation to create a session.
+	 * 
+	 * @param pseudo 	The other user's pseudo.
+	 * @return 	The chosen value.
+	 */
 	protected int displayJOptionSessionCreation(String pseudo) {
 		return JOptionPane.showConfirmDialog(this, "Voulez vous créer une session avec " + pseudo + " ?",
 				"Confirmation session", JOptionPane.YES_NO_OPTION);
 	}
 
+	
+	/**
+	 * Display the dialog box to reply to a session request.
+	 * 
+	 * @param pseudo 	The other user's pseudo.
+	 * @return	The chosen value.
+	 */
 	protected int displayJOptionAskForSession(String pseudo) {
 		return JOptionPane.showConfirmDialog(this, pseudo + " souhaite creer une session avec vous.",
 				"Accepter demande", JOptionPane.YES_NO_OPTION);
 	}
 
+	
+	/**
+	 * Display an informative box with the answer to a session request
+	 * @param reponse
+	 */
 	protected void displayJOptionResponse(String reponse) {
 		JOptionPane.showMessageDialog(this, "Demande de session " + reponse);
 	}
 
-	// ------------ TOGGLEBUTTONS -------------//
+	
+	// ------------ TOGGLE BUTTONS -------------//
 
 	protected void toggleEditPseudo() {
 		this.pseudoSelf.setEditable(!this.pseudoSelf.isEditable());
@@ -223,20 +274,38 @@ public class VueStandard extends Vue {
 		this.pseudoSelf.setEnabled(!this.pseudoSelf.isEnabled());
 	}
 
+	
 	protected void toggleEnableButtonDeconnexion() {
 		this.seDeconnecter.setEnabled(!this.seDeconnecter.isEnabled());
 	}
+	
 
 	protected void toggleEnableButtonConnexion() {
 		this.seConnecter.setEnabled(!this.seConnecter.isEnabled());
 	}
 
+	
 	// ------------SESSION-------------//
 
+	
+	/**
+	 * Check if an object belongs to tabButtons.
+	 * 
+	 * @param o
+	 * @return
+	 */
 	protected boolean isButtonTab(Object o) {
 		return this.tabButtons.contains(o);
 	}
 
+	
+	/**
+	 * Remove the tab (the session) of the tabbed pane that corresponds 
+	 * to the given "close" button. 
+	 * 
+	 * @param button
+	 * @return
+	 */
 	protected int removeSession(JButton button) {
 		int index = this.tabButtons.indexOf(button);
 
@@ -250,6 +319,13 @@ public class VueStandard extends Vue {
 		return index;
 	}
 
+	
+	/**
+	 * Add a session on the view with the given pseudo as the tab title.
+	 * 
+	 * @param pseudo
+	 * @param session
+	 */
 	protected void addSession(String pseudo, VueSession session) {
 		JPanel tabTitle = new JPanel();
 
@@ -267,7 +343,15 @@ public class VueStandard extends Vue {
 		session.requestFocus();
 
 	}
+
 	
+	/**
+	 * Remove the tab (the session) of the tabbed pane that corresponds
+	 * to the given session's panel (view). 
+	 * 
+	 * @param vue
+	 * @return
+	 */
 	protected synchronized int removeSession(VueSession vue) {
 		int index = this.sessions.indexOf(vue);
 
@@ -280,32 +364,35 @@ public class VueStandard extends Vue {
 		return index;
 	}
 	
+	
 	protected void closeAllSession() {
 		Iterator<VueSession> it = this.sessions.iterator();
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			VueSession session = it.next();
 			this.zoneSessions.remove(session);
 			session.destroyAll();
 			it.remove();
 		}
-		
+
 		this.tabButtons.clear();
 	}
 
-
+	
 	// ------------ OTHERS -------------//
 
 	protected void removeAllUsers() {
 		this.userList.removeAllElements();
 	}
+
 	
 	public void initControleur() throws UnknownHostException, IOException {
 		this.c.init();
 	}
 
+	
 	// ------------- PRIVATE CLASSES FOR THE TABS BUTTON -------------//
 	private class TabButton extends JButton {
-		
+
 		private static final long serialVersionUID = 1L;
 
 		public TabButton() {
@@ -328,10 +415,12 @@ public class VueStandard extends Vue {
 			setRolloverEnabled(true);
 		}
 
+		
 		// we don't want to update UI for this button
 		public void updateUI() {
 		}
 
+		
 		// paint the cross
 		protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
@@ -361,6 +450,7 @@ public class VueStandard extends Vue {
 			}
 		}
 
+		
 		public void mouseExited(MouseEvent e) {
 			Component component = e.getComponent();
 			if (component instanceof AbstractButton) {

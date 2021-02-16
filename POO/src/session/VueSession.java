@@ -135,7 +135,6 @@ public class VueSession extends JPanel {
 			Document doc = this.chatWindow.getDocument();
 			doc.insertString(doc.getLength(), str, null);
 		} catch (BadLocationException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -152,7 +151,6 @@ public class VueSession extends JPanel {
 			sdoc.insertString(sdoc.getLength(), message.toString(), null);
 
 		} catch (BadLocationException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -176,7 +174,6 @@ public class VueSession extends JPanel {
 			this.appendString("\n");
 
 		} catch (IOException e) {
-			e.printStackTrace();
 		}
 
 	}

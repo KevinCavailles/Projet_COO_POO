@@ -25,12 +25,11 @@ import connexion.VueConnexion;
 import database.SQLiteManager;
 import main.Utilisateur;
 import observers.ObserverInputMessage;
-import observers.ObserverSocketState;
 import observers.ObserverUserList;
 import session.VueSession;
 
-public class ControleurStandard implements ActionListener, ListSelectionListener, WindowListener, ObserverInputMessage,
-		ObserverUserList, ObserverSocketState {
+public class ControleurStandard
+		implements ActionListener, ListSelectionListener, WindowListener, ObserverInputMessage, ObserverUserList {
 
 	private enum ModifPseudo {
 		TERMINE, EN_COURS
@@ -48,17 +47,23 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 	public ControleurStandard(VueStandard vue, CommunicationUDP commUDP, int portServerTCP, SQLiteManager sqlManager,
 			VueConnexion vueConnexion) throws IOException {
 		this.vue = vue;
+		// Instruction to avoid closing the application when clicking the upper right
+		// cross
 		this.vue.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
 		this.vueConnexion = vueConnexion;
-		
+
+		// The TCP server waiting for session requests
 		this.tcpServ = new TCPServer(portServerTCP);
-	
+
 		this.tcpServ.addObserver(this);
 		this.tcpServ.start();
 
+		// The UDP communication (server + userlist manager)
 		this.commUDP = commUDP;
-		
+
+		// An array to store the usernames of the users a session exists at any point in
+		// time.
 		this.idsSessionEnCours = new ArrayList<String>();
 
 		this.sqlManager = sqlManager;
@@ -86,16 +91,14 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				System.out.println("choix : " + choix);
 
 				if (choix == 0) {
-					
-					
+
 					int port = other.getPort();
-					
-					
+
 					System.out.println("port = " + port);
 					try {
 
 						Socket socketComm = new Socket(InetAddress.getLocalHost(), port);
-						
+
 						this.sendMessage(socketComm, Utilisateur.getSelf().getPseudo());
 						String reponse = this.readMessage(socketComm);
 
@@ -116,7 +119,6 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 						}
 
 					} catch (IOException e1) {
-						e1.printStackTrace();
 					}
 				}
 
@@ -132,7 +134,7 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
-		// Cas Modifier Pseudo
+		// Case change pseudo
 		if ((JButton) e.getSource() == this.vue.getButtonModifierPseudo()) {
 			JButton modifierPseudo = (JButton) e.getSource();
 
@@ -150,7 +152,6 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 					try {
 						this.commUDP.sendMessageInfoPseudo();
 					} catch (IOException e1) {
-						e1.printStackTrace();
 					}
 
 				} else {
@@ -164,16 +165,15 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 			this.vue.toggleEditPseudo();
 		}
 
-		// Cas deconnexion
+		// Case logging off
 		else if ((JButton) e.getSource() == this.vue.getButtonDeconnexion()) {
 			try {
 				this.setVueConnexion();
 			} catch (IOException e1) {
-
-				e1.printStackTrace();
 			}
 		}
 
+		// Case close session
 		else if (this.vue.isButtonTab(e.getSource())) {
 			JButton button = (JButton) e.getSource();
 			int index = this.vue.removeSession(button);
@@ -189,44 +189,32 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		try {
 			this.setVueConnexion();
 		} catch (IOException e1) {
-			e1.printStackTrace();
 		}
 
 	}
 
 	@Override
 	public void windowOpened(WindowEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void windowClosed(WindowEvent e) {
-
 	}
 
 	@Override
 	public void windowIconified(WindowEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void windowDeiconified(WindowEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void windowActivated(WindowEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void windowDeactivated(WindowEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	// ------------SOCKET-------------//
@@ -237,27 +225,30 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 	}
 
 	private String readMessage(Socket sock) throws IOException {
-
 		BufferedReader input = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 		return input.readLine();
 	}
 
 	// ------------OBSERVERS------------- //
 
+	// Method called when there is a connection on the TCP server
+	// This always means, in theory, that an user is asking to create a session
 	@Override
 	public void updateInput(Object o, Object arg) {
 
 		if (o == this.tcpServ) {
-
+			// TCP socket given from the TCP Server
 			Socket sockAccept = (Socket) arg;
 
 			try {
 
+				// Read the other user's pseudo
 				String pseudoOther = this.readMessage(sockAccept);
 				String idOther = this.commUDP.getUserFromPseudo(pseudoOther).getId();
 
 				int reponse;
 
+				// Display the dialog box and wait for replay
 				if (!this.idsSessionEnCours.contains(idOther)) {
 					reponse = this.vue.displayJOptionAskForSession(pseudoOther);
 					System.out.println("reponse : " + reponse);
@@ -265,6 +256,8 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 					reponse = 1;
 				}
 
+				// If the session is accepted
+				// Create a new VueSession with the socket
 				if (reponse == 0) {
 
 					this.idsSessionEnCours.add(idOther);
@@ -278,15 +271,16 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 				}
 
 			} catch (IOException e) {
-				e.printStackTrace();
 			}
 		}
 	}
 
+	// Method called when the userlist of the CommunicationUDP is updated
 	@Override
 	public void updateList(Object o, ArrayList<Utilisateur> userList) {
 
 		if (o == this.commUDP) {
+			// Get every pseudo from the userlist and give the pseudo's list to the view
 			ArrayList<String> pseudos = new ArrayList<String>();
 			for (Utilisateur u : userList) {
 				pseudos.add(u.getPseudo());
@@ -295,13 +289,13 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		}
 	}
 
-	@Override
-	public void updateSocketState(Object o, Object arg) {
-		VueSession session = (VueSession) arg;
-		int index = this.vue.removeSession(session);
-		this.idsSessionEnCours.remove(index);
-	}
-
+	/**
+	 * Send the system message DECONNECTE. Reset the userlist and the user data.
+	 * Close all sessions. Set this view invisible and the connexion's view visible.
+	 * 
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 */
 	private void setVueConnexion() throws UnknownHostException, IOException {
 		this.commUDP.sendMessageDelete();
 		this.commUDP.removeAllUsers();
@@ -314,13 +308,20 @@ public class ControleurStandard implements ActionListener, ListSelectionListener
 		this.vue.setVisible(false);
 		this.vueConnexion.setVisible(true);
 	}
-	
+
+	/**
+	 * Set the controler as the observer of the commUDP to receive the updates on
+	 * the userlist. Then send the system message JE_SUIS_CONNECTE and this
+	 * application's user data
+	 * 
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 */
 	protected void init() throws UnknownHostException, IOException {
 		this.commUDP.setObserver(this);
 		this.commUDP.sendMessageConnecte();
 		this.commUDP.sendMessageInfoPseudo();
 		this.modifPseudo = ModifPseudo.TERMINE;
 	}
-	
 
 }

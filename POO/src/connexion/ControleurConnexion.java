@@ -126,13 +126,6 @@ public class ControleurConnexion implements ActionListener{
 					Utilisateur.setSelf(this.username, pseudo, "localhost", this.portTCP);
 				} catch (UnknownHostException e2) {
 				}
-				
-				//broadcast new pseudo
-				try {
-					this.comUDP.sendMessageInfoPseudo();
-				} catch (UnknownHostException e1) {
-				} catch (IOException e1) {
-				}
 					
 				try {
 					this.resetView();

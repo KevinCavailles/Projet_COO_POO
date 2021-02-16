@@ -147,8 +147,7 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 	// ---------- KEY LISTENER METHODS ---------- //
 
 	@Override
-	public void keyTyped(KeyEvent e) {
-	}
+	public void keyTyped(KeyEvent e) {}
 
 	
 	@Override
@@ -163,8 +162,7 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 
 	
 	@Override
-	public void keyReleased(KeyEvent e) {
-	}
+	public void keyReleased(KeyEvent e) {}
 
 	
 	// ---------- OTHERS ---------- //
@@ -232,7 +230,6 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 			ArrayList<Message> historique = this.sqlManager.getMessageRecord(idOther, pseudoOther);
 			return historique;
 		} catch (SQLException e) {
-			e.printStackTrace();
 			return new ArrayList<Message>();
 
 		}
@@ -252,7 +249,6 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 			this.sqlManager.insertAllMessages(messagesOut, idSelf, idOther);
 			this.sqlManager.insertAllMessages(messagesIn, idOther, idSelf);
 		} catch (SQLException e) {
-			e.printStackTrace();
 		}
 
 		this.vue = null;
@@ -313,7 +309,6 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 				this.answerFileTransfer(port);
 
 			} catch (IOException e) {
-				e.printStackTrace();
 			}
 			break;
 
@@ -331,7 +326,6 @@ public class ControleurSession implements ActionListener, ObserverInputMessage, 
 				ftc.sendFiles();
 				this.files.clear();
 			} catch (IOException | InterruptedException e) {
-				e.printStackTrace();
 			}
 
 			break;
